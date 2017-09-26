@@ -42,49 +42,49 @@ O Kestrel atende o tráfego que vem do ANCM. O ANCM, em sua inicialização, esp
 
 O Kestrel recolhe as requisições do ANCM e as envia para o middleware pipeline do ASP.NET Core, o qual as trata e passa via instãncia do `HttpContext` para a lógica da aplicação. As respostas da aplicação são então passadas de volta ao IIS, que as envia de volta ao cliente HTTP, que iniciou as requisições.
 
-ANCM 
+O ANCM possui algumas outras funções:
 
-ANCM has a few other functions as well:
+* Configurar variáveis de ambientes.
+* Anotar as saídas de `stdout` em um arquivo de armazenamento.
+* Encaminhar tokens de autenticação Windows.
 
-* Sets environment variables.
-* Logs `stdout` output to file storage.
-* Forwards Windows authentication tokens.
+## Como usar o ANCM nos aplicativos ASP.NET Core
 
-## How to use ANCM in ASP.NET Core apps
+Esta seção fornece uma visão geral de como o processo de configuração de um servidor IIS e uma aplicação ASP.NET Core. Para instruções detalhadas, veja [Publicando para o IIS](.../../publishing/iis.md).
 
-This section provides an overview of the process for setting up an IIS server and ASP.NET Core application. For detailed instructions, see [Publishing to IIS](../../publishing/iis.md).
+### Instalar o ANCM
 
-### Install ANCM
+O módulo ASP.NET Core precisa ser instalado no IIS em seus servidores e no IIS Express nas máquinas usadas pra desenvolvimento. Para servidores, o ANCM é incluído no [.NET Core Windows Server bundle](https://aka.ms/dotnetcore.2.0.0-windowshosting). Para máquina de desenvolvedores, o Visual Studio instala automaticamente o ANCM no IIS, e no IIS se este estiver presente na máquina.
 
-The ASP.NET Core Module has to be installed in IIS on your servers and in IIS Express on your development machines. For servers, ANCM is included in the [.NET Core Windows Server Hosting bundle](https://aka.ms/dotnetcore.2.0.0-windowshosting). For development machines, Visual Studio automatically installs ANCM in IIS Express, and in IIS if it is already installed on the machine.
-
-### Install the IISIntegration NuGet package
+### Instalar o pacote IISIntegration via NuGET 
 
 # [ASP.NET Core 2.x](#tab/aspnetcore2x)
 
-The [Microsoft.AspNetCore.Server.IISIntegration](https://www.nuget.org/packages/Microsoft.AspNetCore.Server.IISIntegration/) package is included in the ASP.NET Core metapackages ([Microsoft.AspNetCore](https://www.nuget.org/packages/Microsoft.AspNetCore/) and [Microsoft.AspNetCore.All](xref:fundamentals/metapackage)). If you don't use one of the metapackages, install `Microsoft.AspNetCore.Server.IISIntegration` separately. The `IISIntegration` package is an interoperability pack that reads environment variables broadcast by ANCM to set up your app. The environment variables provide configuration information, such as the port to listen on. 
+O pacote [Microsoft.AspNetCore.Server.IISIntegration](https://www.nuget.org/packages/Microsoft.AspNetCore.Server.IISIntegration/) é incluso nos meta-pacotes do ASP.NET Core ([Microsoft.AspNetCore](https://www.nuget.org/packages/Microsoft.AspNetCore/) e [Microsoft.AspNetCore.All](xref:fundamentals/metapackage)). Se você não usar um meta-pacote, instale o `Microsoft.AspNetCore.Server.IISIntegration` separadamente. O pacote `IISIntegration` é um pacote interoperável, e realiza a leitura de variáveis de ambiente via broadcast para cofigurar sua aplicação. As variáveis de ambiente fornecem informações de configuração, como a porta atendida naquele momento.
 
 # [ASP.NET Core 1.x](#tab/aspnetcore1x)
 
-In your application, install [Microsoft.AspNetCore.Server.IISIntegration](https://www.nuget.org/packages/Microsoft.AspNetCore.Server.IISIntegration/). The `IISIntegration` package  is an interoperability pack that reads environment variables broadcast by ANCM to set up your app. The environment variables provide configuration information, such as the port to listen on. 
+Em sua aplicação, instale Microsoft.AspNetCore.Server.IISIntegration](https://www.nuget.org/packages/Microsoft.AspNetCore.Server.IISIntegration/). O pacote `IISIntegration` é inteoperável, e realiza a leitura de variáveis de ambiente via broadcast para cofigurar sua aplicação. As variáveis de ambiente fornecem informações de configuração, como a porta atendida naquele momento.
 
 ---
 
-### Call UseIISIntegration
+### Chamar o UseIISIntegration
 
 # [ASP.NET Core 2.x](#tab/aspnetcore2x)
 
-The `UseIISIntegration` extension method on [`WebHostBuilder`](https://docs.microsoft.com/aspnet/core/api/microsoft.aspnetcore.hosting.webhostbuilder) is called automatically when you run with IIS.
+O método de extensão `UseIISIntegration` no [`WebHostBuilder`](https://docs.microsoft.com/aspnet/core/api/microsoft.aspnetcore.hosting.webhostbuilder) é chamado automaticamente quando você executa com o IIS.
 
-If you aren't using one of the ASP.NET Core metapackages and haven't installed the  `Microsoft.AspNetCore.Server.IISIntegration` package, you get a runtime error. If you call `UseIISIntegration` explicitly, you get a compile time error if the package isn't installed.
+Se você não estiver usando um meta-pacote ASP.NET Core e não instalou o pacote `Microsoft.AspNetCore.Server.IISIntegration`, você receberá um erro em tempo de execução. Se você chamar explicitamente `UseIISIntegration`, você receberá um erro em tempo de compilção, caso o pacote não esteja instado.
 
 # [ASP.NET Core 1.x](#tab/aspnetcore1x)
 
-In your application's `Main` method, call the `UseIISIntegration` extension method on [`WebHostBuilder`](https://docs.microsoft.com/aspnet/core/api/microsoft.aspnetcore.hosting.webhostbuilder). 
+No método `Main` de sua aplicação, chame o método de extensão `UseIISIntegration` no [`WebHostBuilder`](https://docs.microsoft.com/aspnet/core/api/microsoft.aspnetcore.hosting.webhostbuilder). 
 
 [!code-csharp[](aspnet-core-module/sample/Program.cs?name=snippet_Main&highlight=12)]
 
 ---
+
+O método `UseIISIntegration` procura por variáveis de ambientes que o ANCM configura, e caso não encontre nada é feito. Este comportamento facilita cenários como os de desenvolvimento e testes no macOS e Linux, e a implantação em servidores que executam IIS. Enquanto executando no macOS ou Linux, o
 
 The `UseIISIntegration` method looks for environment variables that ANCM sets, and it no-ops if they aren't found. This behavior facilitates scenarios like developing and testing on macOS or Linux and deploying to a server that runs IIS. While running on macOS or Linux, Kestrel acts as the web server; but when the app is deployed to the IIS environment, it automatically uses ANCM and IIS.
 
