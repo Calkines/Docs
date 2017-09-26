@@ -1,10 +1,11 @@
 ---
-title: ASP.NET Core Module
-author: tdykstra
-description: Introduces ASP.NET Core Module (ANCM), an IIS module that lets the Kestrel web server use IIS or IIS Express as a reverse proxy server.
-keywords: ASP.NET Core,IIS,IIS Express,ASP.NET Core Module,UseIISIntegration
+título: Módulo ASP.NET Core
+autor: tdykstra
+tradutor: calkines
+descrição: Apresenta o ASP.NET Core Módulo (ANCM*), um módulo IIS, que permite o servidor web Kestrel usar o IIS ou IIS Express como um servidor de proxy reservo.
+palavra-chave: ASP.NET Core,IIS,IIS Express,ASP.NET Core Module,UseIISIntegration
 ms.author: tdykstra
-manager: wpickett
+gerente: wpickett
 ms.date: 08/03/2017
 ms.topic: article
 ms.assetid: 4661af33-34c5-4d71-93a0-8c7632f43580
@@ -13,33 +14,35 @@ ms.prod: asp.net-core
 uid: fundamentals/servers/aspnet-core-module
 ms.custom: H1Hack27Feb2017
 ---
-# Introduction to ASP.NET Core Module
+# Introdução ao ASP.NET Core Module
 
-By [Tom Dykstra](https://github.com/tdykstra), [Rick Strahl](https://github.com/RickStrahl), and [Chris Ross](https://github.com/Tratcher) 
+Por [Tom Dykstra](https://github.com/tdykstra), [Rick Strahl](https://github.com/RickStrahl), e [Chris Ross](https://github.com/Tratcher) 
 
-ASP.NET Core Module (ANCM) lets you run ASP.NET Core applications behind IIS, using IIS for what it's good at (security, manageability, and lots more) and using [Kestrel](kestrel.md) for what it's good at (being really fast), and getting the benefits from both technologies at once. **ANCM works only with Kestrel; it isn't compatible with WebListener (in ASP.NET Core 1.x) or HTTP.sys (in 2.x).** 
+O Módulo ASP.NET Core (ANCM) permite que você execute aplicações ASP.NET Core por trás do IIS, usando o IIS para aquilo o que ele faz bem (segurança, gerenciameto, e diversas outras) e usando o [Kestrel](kestrel.md) para aquilo que ele faz bem (iniciar realmente rápido), e, portanto, utilizando os benefícios das duas tecnologias ao mesmo tempo. **ANCM funciona apenas com Kestrel; esta tecnologia não é compatível com WebListener (in ASP.NET Core 1.x) ou HTTP.sys (in 2.x).**
 
-Supported Windows versions:
+Versões do Windows suportadas:
 
-* Windows 7 and Windows Server 2008 R2 and later
+* Windows 7 e Windows Server 2008 R2 e recentes
 
-[View or download sample code](https://github.com/aspnet/Docs/tree/master/aspnetcore/fundamentals/servers/aspnet-core-module/sample)
+[Visualizar ou baixar códigos de demonstração](https://github.com/aspnet/Docs/tree/master/aspnetcore/fundamentals/servers/aspnet-core-module/sample)
 
-## What ASP.NET Core Module does
+## O que o Módulo ASP.NET Core faz?
 
-ANCM is a native IIS module that hooks into the IIS pipeline and redirects traffic to the backend ASP.NET Core application. Most other modules, such as windows authentication, still get a chance to run. ANCM only takes control when a handler is selected for the request, and handler mapping is defined in the application *web.config* file.
+O ANCM é um nativo módulo IIS, que se encaixa no pipeline IIS e redireciona o trágefo para a aplicação backend ASP.NET Core. A maioria dos outros módulos, como a de autenticação via windows, ainda podem ser executados. O ANCM somente assume o controle quando um manipulador é selecionado para requisições, e o mapeamento do manipulador for definido no arquivo *web.config* da aplicação.
 
-Because ASP.NET Core applications run in a process separate from the IIS worker process, ANCM also does process management. ANCM starts the process for the ASP.NET Core application when the first request comes in and restarts it when it crashes. This is essentially the same behavior as classic ASP.NET applications that run in-process in IIS and are managed by WAS (Windows Activation Service).
+Porque a aplicação ASP.NET Core funciona em processo separado daquele do IIS, o ANCM também realiza um gerenciamento de processos. O ANCM inicia o processo para a aplicação ASP.NET Core no momento em que a primeira requisição chega, e o reinicia quando este sofrer uma parada inesperada. Este é o essencialmente o mesmo comportamento de uma aplicação clássica em ASP.NET, que executa in-process no IIS e é gerenciada por WAS (Serviço de Ativação do Windows).
 
-Here's a diagram that illustrates the relationship between IIS, ANCM, and ASP.NET Core applications.
+Aqui está um diagrama que ilustra o relacionamento entre IIS, ANCM e as aplicações ASP.NET Core.
 
-![ASP.NET Core Module](aspnet-core-module/_static/ancm.png)
+![Módulo ASP.NET Core](aspnet-core-module/_static/ancm.png)
 
-Requests come in from the Web and hit the kernel mode Http.Sys driver which routes them into IIS on the primary port (80) or SSL port (443). ANCM forwards the requests to the ASP.NET Core application on the HTTP port configured for the application, which is not port 80/443.
+Requisições vêm da Web e encontram o driver do kernel Http.Sys, que os redireciona para o IIS, na porta primária (80) ou na porta SSL (443). ANCM encaminha as requisições para a aplicação ASP.NET Core, na porta HTTP configurada para a aplicação, a qual não é a 80/443.
 
-Kestrel listens for traffic coming from ANCM.  ANCM specifies the port via environment variable at startup, and the [UseIISIntegration](#call-useiisintegration) method configures the server to listen on `http://localhost:{port}`. There are additional checks to reject requests not from ANCM. (ANCM does not support HTTPS forwarding, so requests are forwarded over HTTP even if received by IIS over HTTPS.)
+O Kestrel atende o tráfego que vem do ANCM. O ANCM, em sua inicialização, especifica a porta destino via variável de ambiente, e o método [UseIISIntegration](#call-useiisintegration) configura o servidor para atender o `http://localhost:{port}`. Existem verificações adicionais para rejeitar requisições que não sejam do ANCM. (O ANCM não oferece suporte a encaminhamento de HTTPS, então requisições são encaminhadas por HTTP mesmo se forem recebidas via IIS HTTPS.)
 
-Kestrel picks up requests from ANCM and pushes them into the ASP.NET Core middleware pipeline, which then handles them and passes them on as `HttpContext` instances to application logic. The application's responses are then passed back to IIS, which pushes them back out to the HTTP client that initiated the requests.
+O Kestrel recolhe as requisições do ANCM e as envia para o middleware pipeline do ASP.NET Core, o qual as trata e passa via instãncia do `HttpContext` para a lógica da aplicação. As respostas da aplicação são então passadas de volta ao IIS, que as envia de volta ao cliente HTTP, que iniciou as requisições.
+
+ANCM 
 
 ANCM has a few other functions as well:
 
