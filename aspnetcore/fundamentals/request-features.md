@@ -22,8 +22,6 @@ Detalhes de implementações de servidor web relacionadas a requisições HTTP e
 
 ## Funcionalidades de interface
 
-## Feature interfaces
-
 O ASP.NET Core define um número de interfaces funcionais para HTTP no `Microsoft.AspNetCore.Http.Features`, que são usadas pelos servidores para identificar os recursos suportados. As interfaces funcionais seguintes manipulam requisições e retornam respostas:
 
 `IHttpRequestFeature`
