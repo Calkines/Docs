@@ -1,8 +1,9 @@
 ---
-title: Request Features in ASP.NET Core
-author: ardalis
-description: 
-keywords: ASP.NET Core,
+título: Recusos de Requisição no ASP.NET Core
+autor: ardalis
+tradutor: calkines
+decrição: 
+palavra-chave: ASP.NET Core,
 ms.author: riande
 manager: wpickett
 ms.date: 10/14/2016
@@ -12,79 +13,81 @@ ms.technology: aspnet
 ms.prod: asp.net-core
 uid: fundamentals/request-features
 ---
-# Request Features in ASP.NET Core
 
-By [Steve Smith](https://ardalis.com/)
+# Recursos de Requisição no ASP.NET Core
 
-Web server implementation details related to HTTP requests and responses are defined in interfaces. These interfaces are used by server implementations and middleware to create and modify the application's hosting pipeline.
+Por [Steve Smith](https://ardalis.com/)
+
+Detalhes de implementações de servidor web relacionadas a requisições HTTP e respostas são definidos em interfaces. Estas interfaces são usadas por implementações de servidor e middleware para criar e modificar o pipeline da aplicação host.
+
+## Funcionalidades de interface
 
 ## Feature interfaces
 
-ASP.NET Core defines a number of HTTP feature interfaces in `Microsoft.AspNetCore.Http.Features` which are used by servers to identify the features they support. The following feature interfaces handle requests and return responses:
+O ASP.NET Core define um número de interfaces funcionais para HTTP no `Microsoft.AspNetCore.Http.Features`, que são usadas pelos servidores para identificar os recursos suportados. As interfaces funcionais seguintes manipulam requisições e retornam respostas:
 
 `IHttpRequestFeature`
-   Defines the structure of an HTTP request, including the protocol, path, query string, headers, and body.
+   Define a estrutura de uma requisição HTTP, incluindo o protocolo, caminho, texto de consulta, cabeçado e corpo.
 
 `IHttpResponseFeature`
-   Defines the structure of an HTTP response, including the status code, headers, and body of the response.
+   Define a estrutura de uma respota HTTP, incluindo o código de status, cabeçalho e corpo da respota.
 
 `IHttpAuthenticationFeature`
-   Defines support for identifying users based on a `ClaimsPrincipal` and specifying an authentication handler.
-
+   Define o suporte para identificação de usuários com base em `ClaimsPrincipal` e especificação de um manipulador de autenticação.
+   
 `IHttpUpgradeFeature`
-   Defines support for [HTTP Upgrades](https://tools.ietf.org/html/rfc2616.html#section-14.42), which allow the client to specify which additional protocols it would like to use if the server wishes to switch protocols.
-
+   Define o suporte para [Atualizações HTTP](https://tools.ietf.org/html/rfc2616.html#section-14.42), que permitem ao cliente especificar quais protocolos adicionais seriam utilizados caso o servidor precisa-se trocar protocolos.
+   
 `IHttpBufferingFeature`
-   Defines methods for disabling buffering of requests and/or responses.
+   Define métodos para desabilitar o buffering de requisições e/ou repostas.   
 
 `IHttpConnectionFeature`
-   Defines properties for local and remote addresses and ports.
+   Define propriedades e portas para endereços locais e remotos.   
 
 `IHttpRequestLifetimeFeature`
-   Defines support for aborting connections, or detecting if a request has been terminated prematurely, such as by a client disconnect.
+   Define o suporte para abortar conexões, ou detectar se uma requisição foi terminada prematuramente, como no caso de uma desconexão do cliente.   
 
 `IHttpSendFileFeature`
-   Defines a method for sending files asynchronously.
+   Define um método para enviar arquivos de forma assíncrona.   
 
 `IHttpWebSocketFeature`
-   Defines an API for supporting web sockets.
+   Define uma API para dar suporte a web sockets.   
 
 `IHttpRequestIdentifierFeature`
-   Adds a property that can be implemented to uniquely identify requests.
+   Adicona uma propriedade que pode ser implementada para identificação única de requisições.   
 
-`ISessionFeature`
-   Defines `ISessionFactory` and `ISession` abstractions for supporting user sessions.
+`ISessionFeature`   
+   Define as abstrações `ISessionFactory`e `ISession` para dar suporte a seções de usuário.   
 
 `ITlsConnectionFeature`
-   Defines an API for retrieving client certificates.
+   Define uma API para receber certificados de clientes.   
 
 `ITlsTokenBindingFeature`
-   Defines methods for working with TLS token binding parameters.
+   Define métodos para trabalhar com parâmetros vinculados de token TLS.   
 
-> [!NOTE]
-> `ISessionFeature` is not a server feature, but is implemented by the `SessionMiddleware` (see [Managing Application State](app-state.md)).
+> [!NOTA]
+> `ISessionFeature` não é uma funcionalidade de servidor, mas é implementada via `SessionMiddleware` (veja [Gerenciando Estado de Aplicação](app-state.md)).
 
-## Feature collections
+## Coleções de recursos
 
-The `Features` property of `HttpContext` provides an interface for getting and setting the available HTTP features for the current request. Since the feature collection is mutable even within the context of a request, middleware can be used to modify the collection and add support for additional features.
+A propriedade `Features` do `HttpContext` fornece uma interface para recuperar e configurar recursos HTTP disponíveis para a requisição atual. Uma vez que a coleção de recursos é mutável, mesmo dentro do contexto de uma requisição, o middleware pode ser usado para modificar esta coleção e passar a suporte novos recursos.
 
-## Middleware and request features
+## Middleware e recursos de requisição
 
-While servers are responsible for creating the feature collection, middleware can both add to this collection and consume features from the collection. For example, the `StaticFileMiddleware` accesses the `IHttpSendFileFeature` feature. If the feature exists, it is used to send the requested static file from its physical path. Otherwise, a slower alternative method is used to send the file. When available, the `IHttpSendFileFeature` allows the operating
-system to open the file and perform a direct kernel mode copy to the network card.
+Enquanto servidores são responsáveis pela criação de coleção de recursos, middleware podem tanto adicionar itens a esta coleção quato consumí-los. Por exemplo, o `StaticFileMiddleware` acessa o recurso `IHttpSendFileFeature`. Se o recurso existir, ele será usado para enviar um o arquivo estatíco requisitado de seu local físico. De outro modo, um método alternativo mais vagaroso é usado para enviar o arquivo. Quando disponível, o `IHttpSendFileFeature` permite ao sistema operacional abrir o arquivo e realizar uma cópia de modo kernel direta para a placa de rede.
 
-Additionally, middleware can add to the feature collection established by the server. Existing features can even be replaced by middleware, allowing the middleware to augment the functionality of the server. Features added to the collection are available immediately to other middleware or the underlying application itself later in the request pipeline.
+Adicionalmente, middleware pode fazer adições a uma coleção de recurso estabelecida pelo servidor. Recursos existentes podem ser substituídos pelo middleware, permitindo aumentar o funcionamento do servidor. Recursos adicionados à coleção estão disponíveis imediatamente a outro middleware ou, depois, à própria aplicação, no pipeline requisitado.
 
-By combining custom server implementations and specific middleware enhancements, the precise set of features an application requires can be constructed. This allows missing features to be added without requiring a change in server, and ensures only the minimal amount of features are exposed, thus limiting attack surface area and improving performance.
+Ao combinar implementações customizadas de servidor e melhoramentos específicos de middleware, o conjunto preciso de recursos necessários a uma aplicação podem ser construídos. Isso permite que recursos inexistêntes sejam adicionados sem requisições de mudança no servidor, e garantem que apenas um mínimo montante de recursos seja exposto, limitando, assim, ataques de superfície e melhorando a performance.
 
-## Summary
+## Sumário
 
-Feature interfaces define specific HTTP features that a given request may support. Servers define collections of features, and the initial set of features supported by that server, but middleware can be used to enhance these features.
+Interfaces de recursos definem características especificas de HTTP, que uma determinada requisição pode suportar. Servidores definem coleções de recursos, e o conjunto inicial de funcionalidades suportadas por aquele servidor, mas middlewares podem ser usados para aumentar estas características.
 
-## Additional Resources
+## Recursos Adicionais
 
-* [Servers](servers/index.md)
+* [Servidores](servers/index.md)
 
 * [Middleware](middleware.md)
 
-* [Open Web Interface for .NET (OWIN)](owin.md)
+* [Interface Web Aberta para .NET (OWIN)](owin.md)
