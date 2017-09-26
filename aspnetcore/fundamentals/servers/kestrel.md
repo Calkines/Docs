@@ -1,8 +1,9 @@
 ---
-title: Kestrel web server implementation in ASP.NET Core
-author: tdykstra
-description: Introduces Kestrel, the cross-platform web server for ASP.NET Core based on libuv.
-keywords: ASP.NET Core,Kestrel,libuv,url prefixes
+título: Implementação do servidor web Kestrel no ASP.NET Core
+autor: tdykstra
+tradutor: calkines
+descrição: Apresentação Kestrel, o servidor web multi-plataforma para ASP.NET Core baseado no libuv.
+palavra-chave: ASP.NET Core,Kestrel,libuv,prefixos url
 ms.author: tdykstra
 manager: wpickett
 ms.date: 08/02/2017
@@ -13,76 +14,77 @@ ms.prod: asp.net-core
 uid: fundamentals/servers/kestrel
 ms.custom: H1Hack27Feb2017
 ---
-# Introduction to Kestrel web server implementation in ASP.NET Core
 
-By [Tom Dykstra](https://github.com/tdykstra), [Chris Ross](https://github.com/Tratcher), and [Stephen Halter](https://twitter.com/halter73)
+# Introdução à implementação do servidor web Kestrel no ASP.NET Core
 
-Kestrel is a cross-platform [web server for ASP.NET Core](index.md) based on [libuv](https://github.com/libuv/libuv), a cross-platform asynchronous I/O library. Kestrel is the web server that is included by default in ASP.NET Core project templates. 
+Por [Tom Dykstra](https://github.com/tdykstra), [Chris Ross](https://github.com/Tratcher), and [Stephen Halter](https://twitter.com/halter73)
 
-Kestrel supports the following features:
+O Kestrel é um [Servidor web para ASP.NET Core](index.md) multi-plataforma baseado no [libuv](https://github.com/libuv/libuv), uma biblioteca I/O multi-plataforma assíncrona. Kestrel é o servidor web que é incluído por padrão nos modelos de projeto do ASP.NET Core.
 
-  * HTTPS
-  * Opaque upgrade used to enable [WebSockets](https://github.com/aspnet/websockets)
-  * Unix sockets for high performance behind Nginx 
+O Kestrel suporta os seguintes recursos:
 
-Kestrel is supported on all platforms and versions that .NET Core supports.
+* HTTPS
+* Atualização opaca usada para permitir [WebSockets](https://github.com/aspnet/websockets)
+* Sockets Unix para alta performance por trás de Nginx.
+
+O Kestrel é suportado em todas plataformas e versões que o .NET Core suporta.
 
 # [ASP.NET Core 2.x](#tab/aspnetcore2x)
 
-[View or download sample code for 2.x](https://github.com/aspnet/Docs/tree/master/aspnetcore/fundamentals/servers/kestrel/sample2)
+[Visualizar ou baixar o código demonstrativo para 2.x](https://github.com/aspnet/Docs/tree/master/aspnetcore/fundamentals/servers/kestrel/sample2)
 
 # [ASP.NET Core 1.x](#tab/aspnetcore1x)
 
-[View or download sample code for 1.x](https://github.com/aspnet/Docs/tree/master/aspnetcore/fundamentals/servers/kestrel/sample1)
+[Visualizar ou baixar o código demonstrativo 1.x](https://github.com/aspnet/Docs/tree/master/aspnetcore/fundamentals/servers/kestrel/sample1)
 
 ---
 
-## When to use Kestrel with a reverse proxy
+## Quando usar o Kestrel com um proxy reverso
 
 # [ASP.NET Core 2.x](#tab/aspnetcore2x)
 
-You can use Kestrel by itself or with a *reverse proxy server*, such as IIS, Nginx, or Apache. A reverse proxy server receives HTTP requests from the Internet and forwards them to Kestrel after some preliminary handling.
+Você pode usar somente o Kestrel ou combiná-lo com um *servidor de proxy reverso*, como o IIS, Nginx ou Apache. O servidor de proxy reverso recebe requisições HTTP da internet e as encaminha para o Kestrel após alguns considerações preliminares.
 
-![Kestrel communicates directly with the Internet without a reverse proxy server](kestrel/_static/kestrel-to-internet2.png)
+![Kestrel comunica-se diretamente com a Internet sem um servidor de proxy reverso](kestrel/_static/kestrel-to-internet2.png)
 
-![Kestrel communicates indirectly with the Internet through a reverse proxy server, such as IIS, Nginx, or Apache](kestrel/_static/kestrel-to-internet.png)
+![Kestrel comunica-se indiretamente com a Internet através de um servidor de proxy reverso, como o IIS, Nginx ou Apache](kestrel/_static/kestrel-to-internet.png)
 
-Either configuration &mdash; with or without a reverse proxy server &mdash; can also be used if Kestrel is exposed only to an internal network.
+Ambas configurações *mdassh; com o sem um servidor de proxy reverso &mdash; podem ser usadas se o Kestrel for exposto apenas para uma rede interna.
 
 # [ASP.NET Core 1.x](#tab/aspnetcore1x)
 
-If your application accepts requests only from an internal network, you can use Kestrel by itself.
+Se sua aplicação aceitar requisições apenas de uma rede interna, você pode usar somente o próprio Kestrel.
 
-![Kestrel communicates directly with your internal network](kestrel/_static/kestrel-to-internal.png)
+![Kestrel comunica-se diretamente com sua rede interna](kestrel/_static/kestrel-to-internal.png)
 
-If you expose your application to the Internet, you must use IIS, Nginx, or Apache as a *reverse proxy server*. A reverse proxy server receives HTTP requests from the Internet and forwards them to Kestrel after some preliminary handling.
+Se você expuser sua aplicação para a Internet, você precisa usar o IIS, Nginx ou o Apache como *servidor de proxy reverso*. Um servidor de proxy reverso recebe solicitações HTTP da Internet e as encaminha para o Kestrel, após algumas considerações preliminares.
 
-![Kestrel communicates indirectly with the Internet through a reverse proxy server, such as IIS, Nginx, or Apache](kestrel/_static/kestrel-to-internet.png)
+![Kestrel comunica-se indiretamente com a Internet através de um servidor de proxy reverso, como o IIS, Nginx ou Apache](kestrel/_static/kestrel-to-internet.png)
 
-A reverse proxy is required for edge deployments (exposed to traffic from the Internet) for security reasons. The 1.x versions of Kestrel don't have a full complement of defenses against attacks. This includes but isn't limited to appropriate timeouts, size limits, and concurrent connection limits.
+Um proxy reverso é requerido para implantações de borda (expostas ao tráfego da Internet) por razões de segurança. A versão 1.x do Kestrel não possui um complemento total de defesas contra ataques. Isso incluí, mas não com limite apropriado, expiração por tempo, limites por tamanho, e limitaçõe de conexões atuais.
 
 ---
 
-A scenario that requires a reverse proxy is when you have multiple applications that share the same IP and port running on a single server. That doesn't work with Kestrel directly because Kestrel doesn't support sharing the same IP and port between multiple processes. When you configure Kestrel to listen on a port, it handles all traffic for that port regardless of host header. A reverse proxy that can share ports must then forward to Kestrel on a unique IP and port.
+Um cenário que requer um proxy reverso é quando você tem diversas aplicações que compartilham o mesmo IP e porta, sendo executadas em um único servidor. Isso não funciona diretamente com o Kestrel porque este não suporta compartilhamento do mesmo IP e porta entre processos múltiplos. Quando você configura o Kestrel para atender a uma porta, ele manipula todo tráfego para aquela porta, independente do cabeçalho do host. Um proxy reverso que pode compartilhar portas precisa encaminhar os cabeçalhos divididos para o Kestrel em um único IP e porta.
 
-Even if a reverse proxy server isn't required, using one might be a good choice for other reasons:
+Mesmo que um servidor de proxy reverso não seja requerido, usar um pode ser uma boa escohe por outras rasões:
 
-* It can limit your exposed surface area.
-* It provides an optional additional layer of configuration and defense.
-* It might integrate better with existing infrastructure.
-* It simplifies load balancing and SSL set-up. Only your reverse proxy server requires an SSL certificate, and that server can communicate with your application servers on the internal network using plain HTTP.
+* Limitar a area de exposição de sua aplicação.
+* Contar com uma camada adicional de configuração e defesa.
+* Possibilidade de melhor integração com uma infraestrutura existente.
+* Simplifica o processo de carregamento balanceado e cofigurações de SSL. Seu servidor de proxy reverso requer apenas um certificado SSL, e ele poderá comunicar-se com seus servidores de aplicação na rede interna usando simples HTTP.
 
-## How to use Kestrel in ASP.NET Core apps
+## Como usar o Kestrel nas aplicações ASP.NET Core
 
 # [ASP.NET Core 2.x](#tab/aspnetcore2x)
 
-The [Microsoft.AspNetCore.Server.Kestrel](https://www.nuget.org/packages/Microsoft.AspNetCore.Server.Kestrel/) package is included in the [Microsoft.AspNetCore.All metapackage](xref:fundamentals/metapackage).
+O pacote [Microsoft.AspNetCore.Server.Kestrel](https://www.nuget.org/packages/Microsoft.AspNetCore.Server.Kestrel/) é incluído no [Microsoft.AspNetCore.All meta-pacote](xref:fundamentals/metapackage).
 
-ASP.NET Core project templates use Kestrel by default. In *Program.cs*, the template code calls `CreateDefaultBuilder`, which calls [UseKestrel](https://docs.microsoft.com/aspnet/core/api/microsoft.aspnetcore.hosting.webhostbuilderkestrelextensions#Microsoft_AspNetCore_Hosting_WebHostBuilderKestrelExtensions_UseKestrel_Microsoft_AspNetCore_Hosting_IWebHostBuilder_) behind the scenes.
+O modelo de projeto do ASP.NET Core usa o Kestrel por padrão. No *Program.cs*, o código modelo chama `CreateDefaultBuilder`, que chama [UseKestrel](https://docs.microsoft.com/aspnet/core/api/microsoft.aspnetcore.hosting.webhostbuilderkestrelextensions#Microsoft_AspNetCore_Hosting_WebHostBuilderKestrelExtensions_UseKestrel_Microsoft_AspNetCore_Hosting_IWebHostBuilder_) por trás das cenas, nos bastidores.
 
 [!code-csharp[](kestrel/sample2/Program.cs?name=snippet_DefaultBuilder&highlight=7)]
 
-If you need to configure Kestrel options, call `UseKestrel` in *Program.cs* as shown in the following example:
+Se você precisar configurar as opções do Kestrel, chame `UseKestrel` no *Program.cs* como exibido no exemplo seguinte:
 
 [!code-csharp[](kestrel/sample2/Program.cs?name=snippet_DefaultBuilder&highlight=9-16)]
 
@@ -96,31 +98,32 @@ Call the [UseKestrel](https://docs.microsoft.com/aspnet/core/api/microsoft.aspne
 
 ---
 
-### Kestrel options
+### Opções do Kestrel
 
 # [ASP.NET Core 2.x](#tab/aspnetcore2x)
 
-The Kestrel web server has constraint configuration options that are especially useful in Internet-facing deployments. Here are some of the limits you can set:
+O servidor web Kestrel possui opções limitação para configuração que são especialmente úteis em implantações que lidam com a Internet. Veja alguns limites que você pode configurar:
+- Número máximo de conexões de clientes
+- Tamanho máximo para o corpo da requisição
+- Taxa de dados mínima para o corpo da requisição
 
-- Maximum client connections
-- Maximum request body size
-- Minimum request body data rate
+Você configura essas limitações, além de outras, na propriedade `Limits` da classe [KestrelServerOptions](https://github.com/aspnet/KestrelHttpServer/blob/rel/2.0.0/src/Microsoft.AspNetCore.Server.Kestrel.Core/KestrelServerOptions.cs). Esta propriedade mantem uma instância da classe [KestrelServerLimits](https://github.com/aspnet/KestrelHttpServer/blob/rel/2.0.0/src/Microsoft.AspNetCore.Server.Kestrel.Core/KestrelServerLimits.cs).
 
-You set these constraints and others in the `Limits` property of the [KestrelServerOptions](https://github.com/aspnet/KestrelHttpServer/blob/rel/2.0.0/src/Microsoft.AspNetCore.Server.Kestrel.Core/KestrelServerOptions.cs) class. The `Limits` property holds an instance of the [KestrelServerLimits](https://github.com/aspnet/KestrelHttpServer/blob/rel/2.0.0/src/Microsoft.AspNetCore.Server.Kestrel.Core/KestrelServerLimits.cs) class. 
+**Número máximo de conexões de clientes**
 
-**Maximum client connections**
-
-The maximum number of concurrent open TCP connections can be set for the entire application with the following code:
+O número máximo de conexões TCP abertas no momento atual pode ser configurado para toda aplicação com o código seguinte:
 
 [!code-csharp[](kestrel/sample2/Program.cs?name=snippet_Limits&highlight=3-4)]
 
-There's a separate limit for connections that have been upgraded from HTTP or HTTPS to another protocol (for example, on a WebSockets request). After a connection is upgraded, it isn't counted against the `MaxConcurrentConnections` limit. 
+Existe um limite separado para conexões que precisam ser atualizadas de HTTP ou HTTPS para outro protocolo (com por exemplo, em requisições WebSockets). Após uma conexão ser atualizada, ela não é mais considerada pelo limite de `MaxConcurrentConnections`.
 
-The maximum number of connections is unlimited (null) by default.
+O número máximo de conexões é, por padrão, ilimitado (vazio).
 
-**Maximum request body size**
+**Tamanho máximo para o corpo da requisição **
 
-The default maximum request body size is 30,000,000 bytes, which is approximately 28.6MB. 
+O valor padrão para o tamanho máximo do corpo da requisição é 30,000,000 bytes, que é aproximadamente 28.6MB.
+
+A maneira recomendada de sobrescrever o limite deste item em uma aplicação ASP.NET Core MVC é usar o atributo [RequestSizeLimite](https://github.com/aspnet/Mvc/blob/rel/2.0.0/src/Microsoft.AspNetCore.Mvc.Core/RequestSizeLimitAttribute.cs) em um método de ação:
 
 The recommended way to override the limit in an ASP.NET Core MVC app is to use the [RequestSizeLimit](https://github.com/aspnet/Mvc/blob/rel/2.0.0/src/Microsoft.AspNetCore.Mvc.Core/RequestSizeLimitAttribute.cs) attribute on an action method:
 
