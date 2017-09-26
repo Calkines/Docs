@@ -84,37 +84,35 @@ No método `Main` de sua aplicação, chame o método de extensão `UseIISIntegr
 
 ---
 
-O método `UseIISIntegration` procura por variáveis de ambientes que o ANCM configura, e caso não encontre nada é feito. Este comportamento facilita cenários como os de desenvolvimento e testes no macOS e Linux, e a implantação em servidores que executam IIS. Enquanto executando no macOS ou Linux, o
+O método `UseIISIntegration` procura por variáveis de ambientes que o ANCM configura, e caso não encontre nada é feito. Este comportamento facilita cenários como os de desenvolvimento e testes no macOS e Linux, e a implantação em servidores que executam IIS. Enquanto executando no macOS ou Linux, o Kestrel age como um servidor web; mas quando a aplicação é implementada em um ambiente IIS, ela automaticamente usa ANCM e IIS.
 
-The `UseIISIntegration` method looks for environment variables that ANCM sets, and it no-ops if they aren't found. This behavior facilitates scenarios like developing and testing on macOS or Linux and deploying to a server that runs IIS. While running on macOS or Linux, Kestrel acts as the web server; but when the app is deployed to the IIS environment, it automatically uses ANCM and IIS.
-
-### ANCM port binding overrides other port bindings
+### O vínculo de portas do ANCM sobrescreve outros vínculos
 
 # [ASP.NET Core 2.x](#tab/aspnetcore2x)
 
-ANCM generates a dynamic port to assign to the back-end process. The `UseIISIntegration` method picks up this dynamic port and configures Kestrel to listen on `http://locahost:{dynamicPort}/`. This overrides other URL configurations, such as calls to `UseUrls` or [Kestrel's Listen API](xref:fundamentals/servers/kestrel?tabs=aspnetcore2x#endpoint-configuration). Therefore, you don't need to call `UseUrls` or Kestrel's `Listen` API when you use ANCM. If you do call `UseUrls` or `Listen`, Kestrel listens on the port you specify when you run the app without IIS.
+O ANCM gera uma porta dinâmica para atribuí-la ao processo de back-end. O método `UseIISIntegration` recupera esta porta dinâmica e configura o Kestrel para atender o `http://localhost:{ dynamicPort}/`. Isso sobrescreve outras configurações de URL, como as chamadas feitas ao método `UseUrls` ou [Kestrel's Listen API](xref:fundamentals/servers/kestrel?tabs=aspnetcore2x#endpoint-configuration). Portanto, você não precisa chamar nenhum destes itens, `UseUrls` ou a API do Kestrel, quando estiver usando o ANCM. Se você chamar `UseUrls` ou `Listen`, o Kestrel vai atender somente a porta que você especificou quando iniciou a aplicação sem o IIS.
 
 # [ASP.NET Core 1.x](#tab/aspnetcore1x)
 
-ANCM generates a dynamic port to assign to the back-end process. The `UseIISIntegration` method picks up this dynamic port and configures Kestrel to listen on `http://locahost:{dynamicPort}/`. This overrides other URL configurations, such as calls to `UseUrls`. Therefore, you don't need to call `UseUrls` when you use ANCM. If you do call `UseUrls`, Kestrel listens on the port you specify when you run the app without IIS.
+O ANCM gera uma porta dinâmica para atribuí-la ao processo de back-end. O método `UseIISIntegration` recupera esta porta dinâmica e configura o Kestrel para atender o `http://localhost:{dynamicPort}/`. Isso sobrescreve outras configurações de URL, como as chamadas ao método `UseUrls` quando você usa o ANCM. Se você chamar `UseUrls`, o Kestrel atende a porta especificada no momento que você executou a aplicação sem o IIS.
 
-In ASP.NET Core 1.0, if you call `UseUrls`, call it **before** you call `UseIISIntegration` so that the ANCM-configured port doesn't get overwritten. This calling order isn't required in ASP.NET Core 1.1, because the ANCM setting overrides `UseUrls`.
+No ASP.NET Core 1.0, se você chamar `UseUrls`, faça isso **antes** de chamar `UseIISIntegration`, assim a porta configurado pelo ANCM não será sobrescrita. Essa order de chamada não é necessária no ASP.NET Core 1.1, porque a configuração do ANCM sobrescreve o `UseUrls`.
 
 ---
 
-### Configure ANCM options in Web.config
+### Configurar opções do ANCM no web.config
 
-Configuration for the ASP.NET Core Module is stored in the *Web.config* file that is located in the application's root folder. Settings in this file point to the startup command and arguments that start your ASP.NET Core app. For sample Web.config code and guidance on configuration options, see [ASP.NET Core Module Configuration Reference](../../hosting/aspnet-core-module.md).
+A configuração para o ASP.NET Core Module é armazenada no arquivo *Web.config*, que está localizado a pasta raiz da aplicação. Configurações feitas neste arquivo apontam para o comando de inicialização e para os argumentos que iniciaram sua aplicação ASP.NET Core. Para demonstrações de código web.config e um guia sobre opções de configuração, veja [Referência de Configuração do Módulo ASP.NET Core](../../hosting/aspnet-core-module.md).
 
-### Run with IIS Express in development
+### Executar com o IIS Express em modo desenvolvimento
 
-IIS Express can be launched by Visual Studio using the default profile defined by the ASP.NET Core templates.
+O IIS Express pode ser iniciado pelo Visual Studio usando o perfil padrão definido por em um modelo ASP.NET Core.
 
-## Next steps
+## Próximos passos
 
-For more information, see the following resources:
+Para mais informações, veja os recursos seguintes:
 
-* [Sample app for this article](https://github.com/aspnet/Docs/tree/master/aspnetcore/fundamentals/servers/aspnet-core-module/sample)
-* [ASP.NET Core Module source code](https://github.com/aspnet/AspNetCoreModule)
-* [ASP.NET Core Module Configuration Reference](../../hosting/aspnet-core-module.md)
-* [Publishing to IIS](../../publishing/iis.md)
+* [Exemplos de aplicações deste artigo](https://github.com/aspnet/Docs/tree/master/aspnetcore/fundamentals/servers/aspnet-core-module/sample)
+* [Código fonte do Módulo ASP.NET](https://github.com/aspnet/AspNetCoreModule)
+* [Referência de Configuração para Módulo ASP.NET Core](../../hosting/aspnet-core-module.md)
+* [Publicando para o IIS](../../publishing/iis.md)
