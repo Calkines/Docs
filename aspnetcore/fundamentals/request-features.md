@@ -63,7 +63,7 @@ O ASP.NET Core define um número de interfaces funcionais para HTTP no `Microsof
 `ITlsTokenBindingFeature`
    Define métodos para trabalhar com parâmetros vinculados de token TLS.   
 
-> [!NOTA]
+> [!NOTE]
 > `ISessionFeature` não é uma funcionalidade de servidor, mas é implementada via `SessionMiddleware` (veja [Gerenciando Estado de Aplicação](app-state.md)).
 
 ## Coleções de recursos
