@@ -1,8 +1,9 @@
 ---
-title: Microsoft.AspNetCore.All metapackage for ASP.NET Core 2.x and later
-author: Rick-Anderson
-description: The Microsoft.AspNetCore.All metapackage includes all supported ASP.NET Core and Entity Framework Core packages, along with their dependencies.
-keywords: ASP.NET Core,NuGet,package,Microsoft.AspNetCore.All,metapackage
+título: Microsoft.AspNetCore.All meta-pacote para ASP.NET Core 2.x ou mais recente
+autor: Rick-Anderson
+tradutor: calkines
+descrição: O Microsoft.AspNetCore.All meta-pacote inclui todos os pacotes suportados para ASP.NET Core e Entity Framework Core, juntamente com suas dependências.
+palavras-chave: ASP.NET Core,NuGet,package,Microsoft.AspNetCore.All,metapackage
 ms.author: riande
 manager: wpickett
 ms.date: 09/20/2017
@@ -12,24 +13,24 @@ ms.prod: asp.net-core
 uid: fundamentals/metapackage
 ---
 
-#Microsoft.AspNetCore.All metapackage for ASP.NET Core 2.x
+#Microsoft.AspNetCore.All meta-pacotes para ASP.NET Core 2.x
 
-This feature requires ASP.NET Core 2.x.
+Este recurso exige ASP.NET Core 2.x.
 
-The [Microsoft.AspNetCore.All](https://www.nuget.org/packages/Microsoft.AspNetCore.All) metapackage for ASP.NET Core includes:
+O meta-pacote [Microsoft.AspNetCore.All)](https://www.nuget.org/packages/Microsoft.AspNetCore.All) para ASP.NET Core inclui:
 
-* All supported packages by the ASP.NET Core team.
-* All supported packages by the Entity Framework Core. 
-* Internal and 3rd-party dependencies used by ASP.NET Core and Entity Framework Core. 
+* Todos pacotes suportados pelo time do ASP.NET Core.
+* Todos pacotes suportados pelo Entity Framework Core.
+* Dependências internas e de terceiros usadas pelo ASP.NET Core e EntityFramework Core.
 
-All the features of ASP.NET Core 2.x and Entity Framework Core 2.x are included in the `Microsoft.AspNetCore.All` package. The default project templates use this package.
+Todos os recursos do ASP.NET Core 2.x e Entity Framework Core 2.x estão inclusos no pacote `Microsoft.AspNetCore.All`. O modelo padrão de projeto utiliza este pacote.
 
-The version number of the `Microsoft.AspNetCore.All` metapackage represents the ASP.NET Core version and Entity Framework Core version (aligned with the .NET Core version).
+O número de versão do meta-pacote `Microsoft.AspNetCore.All` representa as versões dos produtos: ASP.NET Core e Entity Framework Core (de acordo com a versão do .NET Core).
 
-Applications that use the `Microsoft.AspNetCore.All` metapackage automatically take advantage of the [.NET Core Runtime Store](https://docs.microsoft.com/dotnet/core/deploying/runtime-store). The Runtime Store contains all the runtime assets needed to run ASP.NET Core 2.x applications. When you use the `Microsoft.AspNetCore.All` metapackage, **no** assets from the referenced ASP.NET Core NuGet packages are deployed with the application &mdash; the .NET Core Runtime Store contains these assets. The assets in the Runtime Store are precompiled to improve application startup time.
+Aplicações que usam o meta-pacote `Microsoft.AspNetCore.All` recebem automaticamente a vantagem do [.NET Core Runtime Store](https://docs.microsoft.com/dotnet/core/deploying/runtime-store). O Runtime Store contém todos conjuntos de tempo de execução necessários para executar aplicações ASP.NET Core. Quando você usa o meta-pacote `Microsoft.AspNetCore.All`, **nenhum** ativo daqueles pacotes referenciados no ASP.NET Core NuGet são implantados com a aplicação &madash; o .NET Core Runtimes mantem estes ativos. Os ativos no Runtime Store são precompilados para aprimorar o tempo de inicialização da aplicação.
 
-You can use the package trimming process to remove packages that you don't use. Trimmed packages are excluded in published application output.
+Você pode usar o processo de seleção de pacotes para remover aqueles que você não utiliza. Os pacotes selecionados são excluidos da saída de publicação do aplicativo.
 
-The following *.csproj* file references the `Microsoft.AspNetCore.All` metapackage for ASP.NET Core:
+O arquivo seguinte *.csproj* referencia o meta-pacote `Microsoft.AspNetCore.All` para o ASP.NET Core:
 
 [!code-xml[Main](..\mvc\views\view-compilation\sample\MvcRazorCompileOnPublish2.csproj?highlight=9)]
