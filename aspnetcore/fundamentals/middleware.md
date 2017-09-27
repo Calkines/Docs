@@ -1,8 +1,9 @@
 ---
-title: ASP.NET Core Middleware
-author: rick-anderson
-description: Explains middleware and the request pipeline.
-keywords: ASP.NET Core,Middleware,pipeline,delegate
+título: Middleware ASP.NET Core 
+autor: rick-anderson
+tradutor: calkines
+desrição: Explica middleware e o pipeline de requisições
+palavras-chave: ASP.NET Core,Middleware,pipeline,delegate
 ms.author: riande
 manager: wpickett
 ms.date: 08/14/2017
@@ -12,61 +13,61 @@ ms.technology: aspnet
 ms.prod: asp.net-core
 uid: fundamentals/middleware
 ---
-# ASP.NET Core Middleware Fundamentals
+
+# Fundamentos sobre Middleware ASP.NET Core
 
 <a name=fundamentals-middleware></a>
 
-By [Rick Anderson](https://twitter.com/RickAndMSFT) and [Steve Smith](https://ardalis.com/)
+Por [Rick Anderson](https://twitter.com/RickAndMSFT) e [Steve Smith](https://ardalis.com/)
 
-[View or download sample code](https://github.com/aspnet/Docs/tree/master/aspnetcore/fundamentals/middleware/sample)
+[Visualizar ou baixar código demonstrativo](https://github.com/aspnet/Docs/tree/master/aspnetcore/fundamentals/middleware/sample)
 
-## What is middleware
 
-Middleware is software that is assembled into an application pipeline to handle requests and responses. Each component:
+## O que é middleware
 
-* Chooses whether to pass the request to the next component in the pipeline.
-* Can perform work before and after the next component in the pipeline is invoked. 
+Middleware é um software que é agregado em um pipeline de aplicação para controlar as requisições e respostas. Cada componente:
 
-Request delegates are used to build the request pipeline. The request delegates handle each HTTP request.
+* Escolhe quando passar a requisição para o próximo componente no pipeline.
+* Pode executar trabalho antes e depois do próximo componente no pipeline em questão.
 
-Request delegates are configured using [Run](https://docs.microsoft.com/aspnet/core/api/microsoft.aspnetcore.builder.runextensions), [Map](https://docs.microsoft.com/aspnet/core/api/microsoft.aspnetcore.builder.mapextensions), and [Use](https://docs.microsoft.com/aspnet/core/api/microsoft.aspnetcore.builder.useextensions) extension methods. An individual request delegate can be specified in-line as an anonymous method (called in-line middleware), or it can be defined in a reusable class. These reusable classes and in-line anonymous methods are *middleware*, or *middleware components*. Each middleware component in the request pipeline is responsible for invoking the next component in the pipeline, or short-circuiting the chain if appropriate.
+Delegados de requisição são usados para construir o pipeline de requisição. Os delegados de requisição manipulam cada requisição HTTP.
 
-[Migrating HTTP Modules to Middleware](../migration/http-modules.md) explains the difference between request pipelines in ASP.NET Core and the previous versions and provides more middleware samples.
+Delegados de requisição são configurados usando os métodos de extensão [Run]https://docs.microsoft.com/aspnet/core/api/microsoft.aspnetcore.builder.runextensions), [Map](https://docs.microsoft.com/aspnet/core/api/microsoft.aspnetcore.builder.mapextensions), e [Use](https://docs.microsoft.com/aspnet/core/api/microsoft.aspnetcore.builder.useextensions). Um delegado de requisição individual pode ser especificado "in-line" como um método anônimo (chamado de "in-line" middleware), ou este pode ser definido em um classe reutilizável. Estas classes reutilizáveis e métodos anônimos "in-line" são *middleware*, ou *componentes middleware*. Cada componente middleware no pipeline de requisição é responsável por invocar o próximo componente do pipeline, ou curto-circuitar a cadeia, caso seja apropriado.
 
-## Creating a middleware pipeline with IApplicationBuilder
+[Migrar Módulos HTTP para Middleware](../migration/http-modules.md) explica a dierença entre os pipelines de requisição no ASP.NET Core e as versões anteriores, além de fornecer mais exemplos de middleware.
 
-The ASP.NET Core request pipeline consists of a sequence of request delegates, called one after the other, as this diagram shows (the thread of execution follows the black arrows):
+## Criando um pipeline middleware com IApplicationBuilder
 
-![Request processing pattern showing a request arriving, processing through three middlewares, and the response leaving the application. Each middleware runs its logic and hands off the request to the next middleware at the next() statement. After the third middleware processes the request, it's handed back through the prior two middlewares for additional processing after the next() statements each in turn before leaving the application as a response to the client.](middleware/_static/request-delegate-pipeline.png)
+O pipeline de requisição do ASP.NET Core consiste em uma sequencia de delegados de requisição, chamados um após o outro, como mostrado neste diagrama (a execução do thread segue as setas pretas):
 
-Each delegate can perform operations before and after the next delegate. A delegate can also decide to not pass a request to the next delegate, which is called short-circuiting the request pipeline. Short-circuiting is often desirable because it allows unnecessary work to be avoided. For example, the static file middleware can return a request for a static file and short-circuit the rest of the pipeline. Exception-handling delegates need to be called early in the pipeline, so they can catch exceptions that occur in later stages of the pipeline.
+![Processamento do padrão de requisição, exibindo uma chegada de requisição, que está sendo processada através de três middlewares, e a resposta está saindo da aplicação. Cada middleware executa sua lógica e libera a requisição para o próximo middleware através da declaração next(). Depois o processamento da requisição pelo terceiro middleware, a requisição é devolvida, passando de volta pelos outros dois middleware para processamento adicional, respeitando cada declaração next() e deixando a aplicação como resposta ao cliente.(middleware/_static/request-delegate-pipeline.png)]
 
-The simplest possible ASP.NET Core app sets up a single request delegate that handles all requests. This case doesn't include an actual request pipeline. Instead, a single anonymous function is called in response to every HTTP request.
+A aplicação mais simples possível de ASP.NET Core configura apenas um delegado de requisição que controla todas requisições. Este caso não inclui um pipeline de requisições atual. Em vez disso, apenas uma função anônima é chamada para responder a cada requisição HTTP.
 
 [!code-csharp[Main](middleware/sample/Middleware/Startup.cs)]
 
-The first [app.Run](https://docs.microsoft.com/aspnet/core/api/microsoft.aspnetcore.builder.runextensions) delegate terminates the pipeline.
+O primeiro delegado [app.Run](https://docs.microsoft.com/aspnet/core/api/microsoft.aspnetcore.builder.runextensions) termina o pipeline.
 
-You can chain multiple request delegates together with [app.Use](https://docs.microsoft.com/aspnet/core/api/microsoft.aspnetcore.builder.useextensions). The `next` parameter represents the next delegate in the pipeline. (Remember that you can short-circuit the pipeline by *not* calling the *next* parameter.) You can typically perform actions both before and after the next delegate, as this example demonstrates:
+Você pode encadear diversos delegados de requisição com o método de extensão [app.Use](https://docs.microsoft.com/aspnet/core/api/microsoft.aspnetcore.builder.useextensions). O parâmetro `next` representa o próximo delegado no pipeline. (Lembre-se que você pode curto-circuitar o pipeline ao *não* chamar o parâmetro *next*.) Você pode geralmente realizar ações tanto antes como depois do próximo delegado, como demonstrado neste exemplo:
 
 [!code-csharp[Main](middleware/sample/Chain/Startup.cs?name=snippet1)]
 
 >[!WARNING]
-> Do not call `next.Invoke` after the response has been sent to the client. Changes to `HttpResponse` after the response has started will throw an exception. For example, changes such as setting headers, status code, etc,  will throw an exception. Writing to the response body after calling `next`:
-> - May cause a protocol violation. For example, writing more than the stated `content-length`.
-> - May corrupt the body format. For example, writing an HTML footer to a CSS file.
+> Não chame `next.Invoke` depois de um resposta ter sido enviado ao cliente. Mudanças no `HttpResponse` depois da resposta ter sido enviada vai causar um falha. Por exemplo, mudanças como configurações de cabeçalho, código de status, etc, vão causar a exceção. Escrever para o corpo da resposta, depois chamar o `next`:
+> - Pode causar uma violação de protocolo. Por exemplo, escrever mais do que o indicado no `context-length`.
+> - Pode corromper o formato do corpo da resposta. Por exemplo, escrever um rodapé HTML em um arquivo CSS.
 >
-> [HttpResponse.HasStarted](https://docs.microsoft.com/aspnet/core/api/microsoft.aspnetcore.http.features.httpresponsefeature#Microsoft_AspNetCore_Http_Features_HttpResponseFeature_HasStarted) is a useful hint to indicate if headers have been sent and/or the body has been written to.
+> [HttpResponse.HasStarted](https://docs.microsoft.com/aspnet/core/api/microsoft.aspnetcore.http.features.httpresponsefeature#Microsoft_AspNetCore_Http_Features_HttpResponseFeature_HasStarted) é uma boa sugestão para perceber se o cabeçalho já foi enviado e/ou se o corpo da resposta foi modificado.
 
-## Ordering
+## Ordenação
 
-The order that middleware components are added in the `Configure` method defines the order in which they are invoked on requests, and the reverse order for the response. This ordering is critical for security, performance, and functionality.
+A ordem nas quais os componentes middleware são adicinados ao método `Configure` define a order as quais eles serão invocados nas requisições, para resposta a ordem é inversa. Este ordenamento é crítico para a segurança, performance e funcionamento.
 
-The Configure method (shown below) adds the following middleware components:
+Para o método `Configure` (mostrado abaixo), adicione os componentes middleware seguintes:
 
-1. Exception/error handling
-2. Static file server
-3. Authentication
+1. Manipulação de erro/exceção
+2. Servidor de arquivo estático
+3. Autenticação
 4. MVC
 
 ```csharp
@@ -84,13 +85,14 @@ public void Configure(IApplicationBuilder app)
 }
 ```
 
-In the code above, `UseExceptionHandler` is the first middleware component added to the pipeline—therefore, it catches any exceptions that occur in later calls.
+No código acima, `UseExceptionHandler` é o primeiro componente middleware adicionado ao futuro pipeline, ele captura quaisquer exceções que vierem a ocorrer nas próximas chamadas.
 
-The static file middleware is called early in the pipeline so it can handle requests and short-circuit without going through the remaining components. The static file middleware provides **no** authorization checks. Any files served by it, including those under *wwwroot*, are publicly available. See [Working with static files](xref:fundamentals/static-files) for an approach to secure static files.
+O middleware de arquivo estático é chamado cedo no pipeline, assim ele pode controlar requisições e circu-circuitar sem passar pelos próximos componentes. O middleware de arquivo estático **não** fornece verificações de autorização. Quaisquer arquivos servidos por ele, incluindo aqueles da pasta *wwwroot*, estão disponíveis publicamente. Veja [Trabalhando com arquivos estáticos](xref:fundamentals/static-files) para uma visão de como proteger arquivos estáticos.
 
-If the request is not handled by the static file middleware, it's passed on to the Identity middleware (`app.UseIdentity`), which performs authentication. Identity does not short-circuit unauthenticated requests. Although Identity authenticates requests,  authorization (and rejection) occurs only after MVC selects a specific controller and action.
+Se a requisição não for manipulada pelo middleware de arquivo estático, ela será passada para o middleware de identidade (`app.UseIdentity`), o qual cuida da autenticação. Este middleware, de identidade, não curto-circuitará requisições não autenticadas. Contudo o middleware de identidade autentica requisições, mas autorização (ou rejeição) ocorre apenas depois do MVC selecionar um *controller* específico e sua respectiva ação.
 
-The following example demonstrates a middleware ordering where requests for static files are handled by the static file middleware before the response compression middleware. Static files are not compressed with this ordering of the middleware. The MVC responses from [UseMvcWithDefaultRoute](https://docs.microsoft.com/aspnet/core/api/microsoft.aspnetcore.builder.mvcapplicationbuilderextensions#Microsoft_AspNetCore_Builder_MvcApplicationBuilderExtensions_UseMvcWithDefaultRoute_Microsoft_AspNetCore_Builder_IApplicationBuilder_) can be compressed.
+O exemplo seguinte demonstra um ordenamento de middleware, no qual as requisições para arquivos estáticos são manipuladas pelo middleware de arquivos estáticos antes do middleware de compressão de resposta. Arquivos estáticos não são comprimidos nesta ordem apresentada. As repostas MVC do método [UseMvcWithDefaultRoute](https://docs.microsoft.com/aspnet/core/api/microsoft.aspnetcore.builder.mvcapplicationbuilderextensions#Microsoft_AspNetCore_Builder_MvcApplicationBuilderExtensions_UseMvcWithDefaultRoute_Microsoft_AspNetCore_Builder_IApplicationBuilder_) podem ser comprimidas. 
+
 
 ```csharp
 public void Configure(IApplicationBuilder app)
@@ -104,26 +106,29 @@ public void Configure(IApplicationBuilder app)
 
 <a name=middleware-run-map-use></a>
 
-### Use, Run, and Map
+### Usar, Executar e Mapear *(Use, Run e Map)*
 
-You configure the HTTP pipeline using `Use`, `Run`, and `Map`. The `Use` method can short-circuit the pipeline (that is, if it does not call a `next` request delegate). `Run` is a convention, and some middleware components may expose `Run[Middleware]` methods that run at the end of the pipeline.
+Você configura o pipeline HTTP usando os métodos `Use`,`Run` e `Map`. O método `Use` pode curto-circuitar o pipeline (isso é, se ele não chamar um próximo delegado de requisição, através do método `next`. `Run` é uma convenção, e alguns componentes middleware podem expor métodos `Run[Middleware]`, que executam no final do pipeline.
 
-`Map*` extensions are used as a convention for branching the pipeline. [Map](https://docs.microsoft.com/aspnet/core/api/microsoft.aspnetcore.builder.mapextensions) branches the request pipeline based on matches of the given request path. If the request path starts with the given path, the branch is executed.
+Extensões `Map*` são usadas como convenções para ramificar o pipeline. [Mapas](https://docs.microsoft.com/aspnet/core/api/microsoft.aspnetcore.builder.mapextensions) ramificam o pipeline de requisição baseado-se na correspondência de determinados caminhos da requisição. Se o caminho requisitado coindidir com o caminho informado no *Map*, a ramificação será executada. 
 
 [!code-csharp[Main](middleware/sample/Chain/StartupMap.cs?name=snippet1)]
 
-The following table shows the requests and responses from `http://localhost:1234` using the previous code:
+A tabela seguinte mostra as requisições e respostas de `http://localhost:1234` usando o códio anterior:
 
-| Request | Response |
+
+| Requisição | Resposta |
 | --- | --- |
 | localhost:1234 | Hello from non-Map delegate.  |
 | localhost:1234/map1 | Map Test 1 |
 | localhost:1234/map2 | Map Test 2 |
 | localhost:1234/map3 | Hello from non-Map delegate.  |
 
+Quando o método `Map` é usado, o segmento coindicente é removido de `HttpRequest.Path` e apensado a `HttpRequest.PathBase` para cada requisição.
+
 When `Map` is used, the matched path segment(s) are removed from `HttpRequest.Path` and appended to `HttpRequest.PathBase` for each request.
 
-[MapWhen](https://docs.microsoft.com/aspnet/core/api/microsoft.aspnetcore.builder.mapwhenextensions) branches the request pipeline based on the result of the given predicate. Any predicate of type `Func<HttpContext, bool>` can be used to map requests to a new branch of the pipeline. In the following example, a predicate is used to detect the presence of a query string variable `branch`:
+O métod [MapWhen](https://docs.microsoft.com/aspnet/core/api/microsoft.aspnetcore.builder.mapwhenextensions) ramifica o pipeline de requisição com base no resultado de determinado predicado. Qualquer predicado do tipo `Func<HttpContext, bool>` pode ser usado para mapear requisições para uma nova ramificação do pipeline. No exemplo seguinte, um predicado é usado para detectar a presença de uma variável de texto de consulta chamada `branch`;
 
 [!code-csharp[Main](middleware/sample/Chain/StartupMapWhen.cs?name=snippet1)]
 
