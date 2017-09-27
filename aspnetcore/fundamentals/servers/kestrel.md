@@ -125,40 +125,38 @@ O valor padrão para o tamanho máximo do corpo da requisição é 30,000,000 by
 
 A maneira recomendada de sobrescrever o limite deste item em uma aplicação ASP.NET Core MVC é usar o atributo [RequestSizeLimite](https://github.com/aspnet/Mvc/blob/rel/2.0.0/src/Microsoft.AspNetCore.Mvc.Core/RequestSizeLimitAttribute.cs) em um método de ação:
 
-The recommended way to override the limit in an ASP.NET Core MVC app is to use the [RequestSizeLimit](https://github.com/aspnet/Mvc/blob/rel/2.0.0/src/Microsoft.AspNetCore.Mvc.Core/RequestSizeLimitAttribute.cs) attribute on an action method:
-
 ```csharp
 [RequestSizeLimit(100000000)]
 public IActionResult MyActionMethod()
 ```
 
-Here's an example that shows how to configure the constraint for the entire application, every request:
+Veja um exemplo de como configurar um limite para toda aplicação, para cara requisição:
 
 [!code-csharp[](kestrel/sample2/Program.cs?name=snippet_Limits&highlight=5)]
 
-You can override the setting on a specific request in middleware:
+Você pode sobrescrever um requisição específica em um determinado middleware:
 
 [!code-csharp[](kestrel/sample2/Startup.cs?name=snippet_Limits&highlight=3-4)]
- 
-An exception is thrown if you try to configure the limit on a request after the application has started reading the request. There's an `IsReadOnly` property that tells you if the `MaxRequestBodySize` property is in read-only state, meaning it's too late to configure the limit.
 
-**Minimum request body data rate**
+Uma exceção acontece se você tentar configurar o limite de uma requisição depois que a aplicação tenha iniado a leitura da requisição. Existe uma propriedade `IsReadOnly` que lhe informa caso a propriedade `MaxRequestBodySize` esteja em um estado de somente leitura, dando a ideia de que é muito tarde para configurar o limite.
 
-Kestrel checks every second if data is coming in at the specified rate in bytes/second. If the rate drops below the minimum, the connection is timed out. The grace period is the amount of time that Kestrel gives the client to increase its send rate up to the minimum; the rate is not checked during that time. The grace period helps avoid dropping connections that are initially sending data at a slow rate due to TCP slow-start.
+**Taxa de dados mínima para o corpo da requisição´** 
 
-The default minimum rate is 240 bytes/second, with a 5 second grace period.
+O Kestrel verifica a cada segundo se a informação está chegando in um taxa específica de bytes por segundo. Caso a taxa caia para abaixo do mínimo, a conexão expira-se. Período de carência é o tempo total que o Kestrel disponibiliza ao cliente para que ele aumente sua taxa de envio para acima do mínimo; a taxa não é verificada durante neste momento. O período de carência ajuda a evitar a derrubada de conexões que estão inicialmente enviando dados a uma taxa lenta durante o inicio-vagaroso do TCP.
 
-A minimum rate also applies to the response. The code to set the request limit and the response limit is the same except for having `RequestBody` or `Response` in the property and interface names. 
+O taxa padrão mínima é 240 bytes por segundo, com 5 segundos de período de carência.
 
-Here's an example that shows how to configure the minimum data rates in *Program.cs*:
+A taxa mínima também é aplicada a uma resposta. O código para configurar o limite de requisição e respota é o mesmo, exceto por haver uma diferença no nome das propriedades e interfaces, `RequestBody` ou `Response`.
+
+Veja um exemplo que mostra como configurar as taxas de dados mínimas no *Program.cs*:
 
 [!code-csharp[](kestrel/sample2/Program.cs?name=snippet_Limits&highlight=6-9)]
 
-You can configure the rates per request in middleware:
+Você pode configurar as taxas para requisição no middleware:
 
 [!code-csharp[](kestrel/sample2/Startup.cs?name=snippet_Limits&highlight=5-8)]
 
-For information about other Kestrel options, see the following classes:
+Para informações sobre outras opções do Kestrel, veja as classes seguintes:
 
 * [KestrelServerOptions](https://github.com/aspnet/KestrelHttpServer/blob/rel/2.0.0/src/Microsoft.AspNetCore.Server.Kestrel.Core/KestrelServerOptions.cs)
 * [KestrelServerLimits](https://github.com/aspnet/KestrelHttpServer/blob/rel/2.0.0/src/Microsoft.AspNetCore.Server.Kestrel.Core/KestrelServerLimits.cs)
@@ -166,35 +164,36 @@ For information about other Kestrel options, see the following classes:
 
 # [ASP.NET Core 1.x](#tab/aspnetcore1x)
 
-For information about Kestrel options, see [KestrelServerOptions class](https://docs.microsoft.com/aspnet/core/api/microsoft.aspnetcore.server.kestrel.kestrelserveroptions).
+Para informações sobre opções do Kestrel, veja [Classe KestrelServerOptions]
+(https://docs.microsoft.com/aspnet/core/api/microsoft.aspnetcore.server.kestrel.kestrelserveroptions).
 
 ---
 
-### Endpoint configuration
+### Configuração do Endpoint
 
 # [ASP.NET Core 2.x](#tab/aspnetcore2x)
 
-By default ASP.NET Core binds to `http://localhost:5000`. You configure URL prefixes and ports for Kestrel to listen on by calling `Listen` or `ListenUnixSocket` methods on `KestrelServerOptions`. (`UseUrls`, the `urls` command-line argument, and the ASPNETCORE_URLS environment variable also work but have the limitations noted [later in this article](#useurls-limitations).)
+Por padrão o ASP.NET Core é vinculado ao endereço `http://localhost:5000`. Você pode configurar prefixos de URL e portas para o Kestrel atender ou escutar, para isso é necessário chamar os métodos `Listen`  ou `ListenUnixSocket` em `KestrelServerOptions`. (`UseUrls`, o argumento de linha de comando `urls`, além da variável de ambiente ASPNETCORE_URLS também funcionam, mas têm algumas limitações [mais adiante neste artigo](#useurls-limitations).)
 
-**Bind to a TCP socket**
+**Vincular a um socket TCP**
 
-The `Listen` method binds to a TCP socket, and an options lambda lets you configure an SSL certificate:
+O método `Listen` vincula-se a um socket TCP, e algumas opções lambda permitem a você configurar um certificado SSL:
 
 [!code-csharp[](kestrel/sample2/Program.cs?name=snippet_DefaultBuilder&highlight=9-16)]
 
-Notice how this example configures SSL for a particular endpoint by using [ListenOptions](https://github.com/aspnet/KestrelHttpServer/blob/rel/2.0.0/src/Microsoft.AspNetCore.Server.Kestrel.Core/ListenOptions.cs). You can use the same API to configure other Kestrel settings for particular endpoints.
+Perceba como este exemplo configura o SSL para um endpoint particular ao usar [ListenOptions](https://github.com/aspnet/KestrelHttpServer/blob/rel/2.0.0/src/Microsoft.AspNetCore.Server.Kestrel.Core/ListenOptions.cs). Você pode usar a mesma API para configurar outras configurações do Kestrel para endpoint particulares.
 
 [!INCLUDE[How to make an SSL cert](../../includes/make-ssl-cert.md)]
 
-**Bind to a Unix socket**
+**Vincular a um socket Unix**
 
-You can listen on a Unix socket for improved performance with Nginx, as shown in this example:
+Você pode ouvir/atender a um socket Unix para aprimorar a performance com Nginx, como demonstrado neste exemplo:
 
 [!code-csharp[](kestrel/sample2/Program.cs?name=snippet_UnixSocket)]
 
-**Port 0**
+**Porta 0**
 
-If you specify port number 0, Kestrel dynamically binds to an available port. The following example shows how to determine which port Kestrel actually bound to at runtime:
+Se você especificar uma porta número 0, o Kestrel dinamicamente vincula-se a uma porta disponível. O exemplo seguinte mostra como determinar a qual porta atual o Kestrel está vinculado no tempo de execução: 
 
 [!code-csharp[](kestrel/sample2/Startup.cs?name=snippet_Configure&highlight=3,13,16-17)]
 
@@ -202,57 +201,56 @@ If you specify port number 0, Kestrel dynamically binds to an available port. Th
 
 **UseUrls limitations**
 
-You can configure endpoints by calling the `UseUrls` method or using the `urls` command-line argument or the ASPNETCORE_URLS environment variable. These methods are useful if you want your code to work with servers other than Kestrel. However, be aware of these limitations:
+Você pode configurar os endpoints ao chamar o método `UseUrls`, usar o argumento de linha de comando `urls` ou através da variável de ambiente ASPNETCORE_URLS. Estes métodos são úteis se você quiser que seu código trabalhe com servidor diferentes do Kestrel. Contudo, esteja ciente destas limitações:
 
-* You can't use SSL with these methods.
-* If you use both the `Listen` method and `UseUrls`, the `Listen` endpoints override the `UseUrls` endpoints.
+* Você não pode usar SSL com estes métodos.
+* Se você usar os dois métodos, `Listen` e `UseUrls`, as informações de endpoint passadas para o método `Listen` sobrescrevem as passadas para o `UseUrls`.
 
-**Endpoint configuration for IIS**
+**Configuração de EndPoint para IIS**
 
-If you use IIS, the URL bindings for IIS override any bindings that you set by calling either `Listen` or `UseUrls`. For more information, see [Introduction to ASP.NET Core Module](aspnet-core-module.md).
+Se você usar IIS, o vínculo de URL do IIS sobrescreve qualquer regra de vinculo que você tenha criado através dos métodos `Listen` ou `UseUrls`. Para mais informações, veja [Introdução ao Módulo ASP.NET Core](aspnet-core-module.md).
 
 # [ASP.NET Core 1.x](#tab/aspnetcore1x)
 
-By default ASP.NET Core binds to `http://localhost:5000`. You can configure URL prefixes and ports for Kestrel to listen on by using the `UseUrls` extension method, the `urls` command-line argument, or the ASP.NET Core configuration system. For more information about these methods, see [Hosting](../../fundamentals/hosting.md). For information about how URL binding works when you use IIS as a reverse proxy, see [ASP.NET Core Module](aspnet-core-module.md). 
+Por padrão o ASP.NET Core é vinculado ao endereço `http://localhost:5000`. Você pode configurar prefixos de URL e portas para o Kestrel atender ou escutar, para isso é necessário chamar o método de extensão `UseUrls`, o argumento para linha de comando `urls` ou o sistema de configuração do ASP.NET Core. Para mais informações sobre estes métodos, veja [Hospedagem](../../fundamentals/hosting.md). Para informações sobre como funciona o vínculo de URL quando você usa o IIS como servidor de proxy reverso, veja [Módulo ASP.NET Core](aspnet-core-module.md). 
 
 ---
 
-### URL prefixes
+### Prefixos de URL
 
-If you call `UseUrls` or use the `urls` command-line argument or ASPNETCORE_URLS environment variable, the URL prefixes can be in any of the following formats. 
+Se você chamar `UseUrls` ou usar o argumento de linha de comando `urls` ou a variável de ambiente ASPNETCORE_URLS, os prefixos de URL podem ser em qualquer um destes formatos:
 
 # [ASP.NET Core 2.x](#tab/aspnetcore2x)
 
-Only HTTP URL prefixes are valid; Kestrel does not support SSL when you configure URL bindings by using `UseUrls`.
+Somente prefixos HTTP URL são validos; o Kestrel não suporta SSL quando você configura os vinculos de URL através do método `UseUrls`.
 
-* IPv4 address with port number
+* Endereço IPv4 e número de porta
 
   ```
   http://65.55.39.10:80/
   ```
 
-  0.0.0.0 is a special case that binds to all IPv4 addresses.
+  0.0.0.0 é um caso especial que vincula todos os endereços IPv4.
 
-
-* IPv6 address with port number
+* Endereço IPv6 e número de porta
 
   ```
   http://[0:0:0:0:0:ffff:4137:270a]:80/ 
   ```
 
-  [::] is the IPv6 equivalent of IPv4 0.0.0.0.
+  [::] é o IPv6 que equivale ao IPv4 0.0.0.0.
 
 
-* Host name with port number
+* Nome de host e número de porta
 
   ```
   http://contoso.com:80/
   http://*:80/
   ```
 
-  Host names, *, and +, are not special. Anything that is not a recognized IP address or "localhost" will bind to all IPv4 and IPv6 IPs. If you need to bind different host names to different ASP.NET Core applications on the same port, use [HTTP.sys](httpsys.md) or a reverse proxy server such as IIS, Nginx, or Apache.
-
-* "Localhost" name with port number or loopback IP with port number
+  Nome de hosts, *, e +, não são especiais. Qualquer coisa que não seja um endereço de IP reconhecido ou um "localhost" será vinculado a todos IPv4 e IPv6. Se você precisa vincular diferentes nome de hosts à diferentes aplicações ASP.NET Core na mesma porta, use o [HTTP.sys](httpsys.md) ou um proxy reverso como o IIS, Nginx ou Apache.
+  
+* Nome de "Localhost" e número da porta ou loopback IP e número de porta
 
   ```
   http://localhost:5000/
@@ -260,31 +258,30 @@ Only HTTP URL prefixes are valid; Kestrel does not support SSL when you configur
   http://[::1]:5000/
   ```
 
-  When `localhost` is specified, Kestrel tries to bind to both IPv4 and IPv6 loopback interfaces. If the requested port is in use by another service on either loopback interface, Kestrel fails to start. If either loopback interface is unavailable for any other reason (most commonly because IPv6 is not supported), Kestrel logs a warning. 
+  Quando `localhost` é especificado, o Kestrel tenta vincular-se as interfaces tanto de IPv4 quanto de IPv6. Se a porta requisitada estiver em uso por outro serviço ou mesmo por uma interface de loopback, o Kestrel apresenta um falha na inicialização. Se a interface de loopback não estiver disponível por qualquer outro motivo (mais comumente porque IPv6 não é suportado), o Kestrel armazena um alerta como log.
 
 # [ASP.NET Core 1.x](#tab/aspnetcore1x)
 
-* IPv4 address with port number
+* Endereço IPv4 e número de porta
 
   ```
   http://65.55.39.10:80/
   https://65.55.39.10:443/
   ```
 
-  0.0.0.0 is a special case that binds to all IPv4 addresses.
+  0.0.0.0 é um caso especial que vincula todos os endereços IPv4.
 
-
-* IPv6 address with port number
+* Endereço IPv6 e número de porta
 
   ```
   http://[0:0:0:0:0:ffff:4137:270a]:80/ 
   https://[0:0:0:0:0:ffff:4137:270a]:443/ 
   ```
 
-  [::] is the IPv6 equivalent of IPv4 0.0.0.0.
+  [::] é o IPv6 que equivale ao IPv4 0.0.0.0.
 
 
-* Host name with port number
+* Nome de host e número de porta
 
   ```
   http://contoso.com:80/
@@ -293,9 +290,9 @@ Only HTTP URL prefixes are valid; Kestrel does not support SSL when you configur
   https://*:443/
   ```
 
-  Host names, \*, and + aren't special. Anything that isn't a recognized IP address or "localhost" binds to all IPv4 and IPv6 IPs. If you need to bind different host names to different ASP.NET Core applications on the same port, use [WebListener](weblistener.md) or a reverse proxy server such as IIS, Nginx, or Apache.
+  Nome de hosts, *, e +, não são especiais. Qualquer coisa que não seja um endereço de IP reconhecido ou um "localhost" será vinculado a todos IPv4 e IPv6. Se você precisa vincular diferentes nome de hosts à diferentes aplicações ASP.NET Core na mesma porta, use o [WebListener](weblistener.md) ou um proxy reverso como o IIS, Nginx ou Apache.
 
-* "Localhost" name with port number or loopback IP with port number
+* Nome de "Localhost" e número da porta ou loopback IP e número de porta
 
   ```
   http://localhost:5000/
@@ -303,9 +300,9 @@ Only HTTP URL prefixes are valid; Kestrel does not support SSL when you configur
   http://[::1]:5000/
   ```
 
-  When `localhost` is specified, Kestrel tries to bind to both IPv4 and IPv6 loopback interfaces. If the requested port is in use by another service on either loopback interface, Kestrel fails to start. If either loopback interface is unavailable for any other reason (most commonly because IPv6 is not supported), Kestrel logs a warning. 
+  Quando `localhost` é especificado, o Kestrel tenta vincular-se as interfaces tanto de IPv4 quanto de IPv6. Se a porta requisitada estiver em uso por outro serviço ou mesmo por uma interface de loopback, o Kestrel apresenta um falha na inicialização. Se a interface de loopback não estiver disponível por qualquer outro motivo (mais comumente porque IPv6 não é suportado), o Kestrel armazena um alerta como log.  
 
-* Unix socket
+* Socket Unix
 
   ```
   http://unix:/run/dan-live.sock  
@@ -313,15 +310,15 @@ Only HTTP URL prefixes are valid; Kestrel does not support SSL when you configur
 
 **Port 0**
 
-If you specify port number 0, Kestrel dynamically binds to an available port. Binding to port 0 is allowed for any host name or IP except for `localhost` name.
+Se você especificar uma porta número 0, o Kestrel dinamicamente vincula-se a uma porta disponível. Vinculo à porta  é permitido para qualquer nome de host ou IP, exceto para o nome `localhost`.
 
-The following example shows how to determine which port Kestrel actually bound to at runtime:
+O Exemplo seguinte mostra como determinar qual porta o Kestrel vincula-se em tempo de execução:
 
 [!code-csharp[](kestrel/sample1/Startup.cs?name=snippet_Configure)]
 
-**URL prefixes for SSL**
+**Prefixos URL para SSL**
 
-Be sure to include URL prefixes with `https:` if you call the `UseHttps` extension method, as shown below.
+Tenha certeza de ter incluído os prefixos URL com `https:` se você chamar o método de extensão `UseHttps`, como demostrado abaixo:
 
 ```csharp
 var host = new WebHostBuilder() 
@@ -336,23 +333,23 @@ var host = new WebHostBuilder()
 ```
 
 > [!NOTE]
-> HTTPS and HTTP cannot be hosted on the same port.
+> HTTPS e HTTP não podem ser hospedados na mesma porta.
 
-[!INCLUDE[How to make an SSL cert](../../includes/make-ssl-cert.md)]
+[!INCLUDE[Como fazer um certificado SSL](../../includes/make-ssl-cert.md)]
 
 ---
-## Next steps
+## Próximos passos
 
-For more information, see the following resources:
+Para mais informações, veja os recursos seguintes:
 
 # [ASP.NET Core 2.x](#tab/aspnetcore2x)
 
-* [Sample app for 2.x](https://github.com/aspnet/Docs/tree/master/aspnetcore/fundamentals/servers/kestrel/sample2)
-* [Kestrel source code](https://github.com/aspnet/KestrelHttpServer)
+* [Aplicação demonstrativa para 2.x](https://github.com/aspnet/Docs/tree/master/aspnetcore/fundamentals/servers/kestrel/sample2)
+* [Código fonte Kestrel](https://github.com/aspnet/KestrelHttpServer)
 
 # [ASP.NET Core 1.x](#tab/aspnetcore1x)
 
-* [Sample app for 1.x](https://github.com/aspnet/Docs/tree/master/aspnetcore/fundamentals/servers/kestrel/sample1)
-* [Kestrel source code](https://github.com/aspnet/KestrelHttpServer)
+* [Aplicação demonstrativa para 2.x](https://github.com/aspnet/Docs/tree/master/aspnetcore/fundamentals/servers/kestrel/sample1)
+* [Código fonte Kestrel](https://github.com/aspnet/KestrelHttpServer)
 
 ---
