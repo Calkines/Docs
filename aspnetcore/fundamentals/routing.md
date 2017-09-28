@@ -1,8 +1,9 @@
 ---
-title: Routing in ASP.NET Core
-author: ardalis
-description: 
-keywords: ASP.NET Core,
+título: Rotas no ASP.NET Core
+autor: ardalis
+tradutor: Calkines
+descricao: 
+palavras-chave: ASP.NET Core,
 ms.author: riande
 manager: wpickett
 ms.date: 10/14/2016
@@ -12,41 +13,44 @@ ms.technology: aspnet
 ms.prod: asp.net-core
 uid: fundamentals/routing
 ---
-# Routing in ASP.NET Core
 
-By [Ryan Nowak](https://github.com/rynowak), [Steve Smith](https://ardalis.com/), and [Rick Anderson](https://twitter.com/RickAndMSFT)
+# Roteamento no ASP.NET Core
 
-Routing functionality is responsible for mapping an incoming request to a route handler. Routes are defined in the ASP.NET app and configured when the app starts up. A route can optionally extract values from the URL contained in the request, and these values can then be used for request processing. Using route information from the ASP.NET app, the routing functionality is also able to generate URLs that map to route handlers. Therefore, routing can find a route handler based on a URL, or the URL corresponding to a given route handler based on route handler information.
+Por [Ryan Nowak](https://github.com/rynowak), [Steve Smith](https://ardalis.com/), e [Rick Anderson](https://twitter.com/RickAndMSFT)
+
+A funcionalidade de roteamento é responsável por mapear um requisição de entrada para um controlador de rota. Rotas são definidas na aplicação ASP.NET e configuradas quando acontece a inicialização. Uma rota pode opcionalmente extrair valores de uma URL contida em uma requisição, e estes valores podem ser usados para processamento de requisição. Usando informações de rota da aplicação ASP.NET, a funcionalidade de roteamento também é capaz de gerar URLs que mapeiam os controladores de rota. Portanto, o roteamento pode encontrar um controlardor de rota com base na URL, ou na 
+
+Routing functionality is responsible for mapping an incoming request to a route handler. Routes are defined in the ASP.NET app and configured when the app starts up. A route can optionally extract values from the URL contained in the request, and these values can then be used for request processing. Using route information from the ASP.NET app, the routing functionality is also able to generate URLs that map to route handlers. Portanto, o roteamento pode encontrar um manipulador de rotas com base em uma URL, ou uma URL correspondente a um determinado manipulador de rotas, leavando em consideração as informações do manipulador de rotas.
 
 >[!IMPORTANT]
-> This document covers the low level ASP.NET Core routing. For ASP.NET Core MVC routing, see [Routing to Controller Actions](../mvc/controllers/routing.md)
+> Este documento cobre cobre o baixo nível de roteamento do ASP.NET Core. Para roteamento ASP.NET Core MVC, veja [Roteamento para Ações de Controle](../mvc/controllers/routing.md)
 
-[View or download sample code](https://github.com/aspnet/Docs/tree/master/aspnetcore/fundamentals/routing/sample)
+[Visualizar ou baixar códigos demonstrativos](https://github.com/aspnet/Docs/tree/master/aspnetcore/fundamentals/routing/sample)
 
-## Routing basics
+## Roteamento básico
 
-Routing uses *routes* (implementations of [IRouter](https://docs.microsoft.com/aspnet/core/api/microsoft.aspnetcore.routing.irouter)) to:
+O roteamento usa *routes* (implementações do [IRouter](https://docs.microsoft.com/aspnet/core/api/microsoft.aspnetcore.routing.irouter)) 
+para:
 
-* map incoming requests to *route handlers*
+* mapear requisições de entrada para *route handlers*
 
-* generate URLs used in responses
+* gerar URLs usada nas respostas
 
-Generally, an app has a single collection of routes. When a request arrives, the route collection is processed in order. The incoming request looks for a route that matches the request URL by calling the `RouteAsync` method on each available route in the route collection. By contrast, a response can use routing to generate URLs (for example, for redirection or links) based on route information, and thus avoid having to hard-code URLs, which helps maintainability.
+Geralmente, uma aplicação possui uma única coleção de rotas. Quando uma requisição chega, a coleção de rotas é processada. A requisição de netrada procura por um rota que coincida com a URL requisitada ao chamar o método `RouteAsync` em cada rota disponível na coleção de rotas. Por outro lado, a respota pode usar o roteamento para gerar URLs (por exemplo, para redirecimento ou atalhos) baseadas nas informações de rota, e, assim, deixar as URL fixas de lado, o que ajuda na manutenibilidade.
 
-Routing is connected to the [middleware](middleware.md) pipeline by the `RouterMiddleware` class. [ASP.NET MVC](../mvc/overview.md) adds routing to the middleware pipeline as part of its configuration. To learn about using routing as a standalone component, see [using-routing-middleware](#using-routing-middleware).
+O roteamento é conectado ao pipeline de [middleware](middleware.md) pela classe `RouterMiddleware`. [ASP.NET MVC](../mvc/overview.md) adiciona o roteamento ao pipeline de middleware como parte de sua configuração. Para aprender sobre como usar o roteamento como um componente isolado, veja [usando-roteamento-middleware](#using-routing-middleware).
 
 <a name=url-matching-ref></a>
 
-### URL matching
+### Coincidência de URL
 
-URL matching is the process by which routing dispatches an incoming request to a *handler*. This process is generally based on data in the URL path, but can be extended to consider any data in the request. The ability to dispatch requests to separate handlers is key to scaling the size and complexity of an application.
+Coincidência de URL é o processo pelo qual o roteamento despacha uma requisição de entrada para um *handler*. Este processo é geralmente baseado em dados de entrada que foi informados no caminho URL, mas pode ser estendido para considerar qualquer informação da requisição. A habilidade de despachar requisições para diversos controladores é a chave escalonar o tamanho e a complexidade de uma aplicação.
 
-Incoming requests enter the `RouterMiddleware`, which calls the `RouteAsync` method on each route in sequence. The `IRouter` instance chooses whether to *handle* the request by setting the `RouteContext` `Handler` to a non-null
-`RequestDelegate`. If a route sets a handler for the request, route processing stops and the handler will be invoked to process the request. If all routes are tried and no handler is found for the request, the middleware calls *next* and the next middleware in the request pipeline is invoked.
+Requisições de entrada entram no `RouterMiddleware`, o qual chama o método `RouteAsync` para cada rota encontrada na sequencia. A instância de `IRouter` escolhe se *controla* a requisição ao configurar o `RouteContext` `Handler`para um `RequestDelegate` não nulo. Se um rota definir um controlador para a requisição, o processo de rota para e o controlar será invocado para processar a requisição. Se todas as rotas forem testadas e nenhum controlador for encontrado para a requisição, o middleware chama *next* e o próximo middleware no pipeline de requisições será invocado.
 
-The primary input to `RouteAsync` is the `RouteContext` `HttpContext` associated with the current request. The `RouteContext.Handler` and `RouteContext` `RouteData` are outputs that will be set after a route matches.
+A entrada primária para `RouteAsync` é o `RouteContext` `HttpContext` associados à requisição atual. O `RouteContext.Handler` e `RouteContext` `RouteData` são saída que vão ser configuradas após a coincidência de rota.  
 
-A match during `RouteAsync` will also set the properties of the `RouteContext.RouteData` to appropriate values based on the request processing done so far. If a route matches a request, the `RouteContext.RouteData` will contain important state information about the *result*.
+Um coindicência durante `RouteAsync` também vai configurar as propriedades do `RouteContext.RouteData` para valores apropriados com base no término do processo de requisição. Se uma rota coindice com uma requisição, o `RouteContext.RouteData` vai conter importante informações de estado sobre o *resultado*.
 
 `RouteData` `Values` is a dictionary of *route values* produced from the route. These values are usually determined by tokenizing the URL, and can be used to accept user input, or to make further dispatching decisions inside the application.
 
