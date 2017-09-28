@@ -128,18 +128,18 @@ Quando o método `Map` é usado, o segmento coindicente é removido de `HttpRequ
 
 When `Map` is used, the matched path segment(s) are removed from `HttpRequest.Path` and appended to `HttpRequest.PathBase` for each request.
 
-O métod [MapWhen](https://docs.microsoft.com/aspnet/core/api/microsoft.aspnetcore.builder.mapwhenextensions) ramifica o pipeline de requisição com base no resultado de determinado predicado. Qualquer predicado do tipo `Func<HttpContext, bool>` pode ser usado para mapear requisições para uma nova ramificação do pipeline. No exemplo seguinte, um predicado é usado para detectar a presença de uma variável de texto de consulta chamada `branch`;
+O método [MapWhen](https://docs.microsoft.com/aspnet/core/api/microsoft.aspnetcore.builder.mapwhenextensions) ramifica o pipeline de requisição com base no resultado de determinado predicado. Qualquer predicado do tipo `Func<HttpContext, bool>` pode ser usado para mapear requisições para uma nova ramificação do pipeline. No exemplo seguinte, um predicado é usado para detectar a presença de uma variável de texto de consulta chamada `branch`;
 
 [!code-csharp[Main](middleware/sample/Chain/StartupMapWhen.cs?name=snippet1)]
 
-The following table shows the requests and responses from `http://localhost:1234` using the previous code:
+A tabela seguinte mostra as requisições e respostas de `http://localhost:1234` usando o código anterior:
 
-| Request | Response |
+| Requisição | Resposta |
 | --- | --- |
 | localhost:1234 | Hello from non-Map delegate.  |
 | localhost:1234/?branch=master | Branch used = master|
 
-`Map` supports nesting, for example:
+`Map` suporta aninhamento, por exemplo:
 
 ```csharp
 app.Map("/level1", level1App => {
@@ -153,60 +153,59 @@ app.Map("/level1", level1App => {
        });
    });
    ```
-
-`Map` can also match multiple segments at once, for example:
+`Map` também pode combinar segmentos múltiplos de uma vez, por exemplo:
 
  ```csharp
 app.Map("/level1/level2", HandleMultiSeg);
 ```
 
-## Built-in middleware
+## Middleware prontos
 
-ASP.NET Core ships with the following middleware components:
+O ASP.NET Core é entregue com os seguinte componentes middleware: 
 
-| Middleware | Description |
+
+| Middleware | Descrição |
 | ----- | ------- |
-| [Authentication](xref:security/authentication/identity) | Provides authentication support. |
-| [CORS](xref:security/cors) | Configures Cross-Origin Resource Sharing. |
-| [Response Caching](xref:performance/caching/middleware) | Provides support for caching responses. |
-| [Response Compression](xref:performance/response-compression) | Provides support for compressing responses. |
-| [Routing](xref:fundamentals/routing) | Defines and constrains request routes. |
-| [Session](xref:fundamentals/app-state) | Provides support for managing user sessions. |
-| [Static Files](xref:fundamentals/static-files) | Provides support for serving static files and directory browsing. |
-| [URL Rewriting Middleware](xref:fundamentals/url-rewriting) | Provides support for rewriting URLs and redirecting requests. |
+| [Authentication](xref:security/authentication/identity) | Fornece Suporte à autenticação. |
+| [CORS](xref:security/cors) | Configura Compartilhamento de Recorsos Múlti-Origens. |
+| [Response Caching](xref:performance/caching/middleware) | Fornece suporte para respota de cache. |
+| [Response Compression](xref:performance/response-compression) | Fornece suporte para suporte para respostas comprimidas. |
+| [Routing](xref:fundamentals/routing) | Definições e limitações para requisições de rotas. |
+| [Session](xref:fundamentals/app-state) | Fornece suporte para gerenciamento de sessão de usuaário. |
+| [Static Files](xref:fundamentals/static-files) | Fornece suporte à disponibilização de arquivos estáticos e pesquisa de diretórios. |
+| [URL Rewriting Middleware](xref:fundamentals/url-rewriting) | Fornece suporte para reescrita de URLs e requisições de redirecionamento. |
 
 <a name=middleware-writing-middleware></a>
 
-## Writing middleware
+## Escrevendo um middleware
 
-Middleware is generally encapsulated in a class and exposed with an extension method. Consider the following middleware, which sets the culture for the current request from the query string:
+O componente middleware é geralmente encapsulado em um classe e exposto via um método de extensão. Considere o seguinte middleware, que configura a cultura para uma requisição atual feita através de texto de consulta (query string):
 
 [!code-csharp[Main](middleware/sample/Culture/StartupCulture.cs?name=snippet1)]
 
-Note: The sample code above is used to demonstrate creating a middleware component. See [
-Globalization and localization](xref:fundamentals/localization) for ASP.NET Core's built-in localization support.
+Nota: O código exemplo acima é usado para demonstrar a criação de um componente middleware. Veja [Localização e Globalização](xref:fundamentals/localization) para acessar a documentação de suporte à localização do ASP.NET Core.
 
-You can test the middleware by passing in the culture, for example `http://localhost:7997/?culture=no`.
+Você pode testar o middleware passando um valor para culture, por exemplo `http://localhost:7997/?culture=no`
 
-The following code moves the middleware delegate to a class:
+O código seguinte move o delegado middleware para uma classe:
 
 [!code-csharp[Main](middleware/sample/Culture/RequestCultureMiddleware.cs)]
 
-The following extension method exposes the middleware through [IApplicationBuilder](https://docs.microsoft.com/aspnet/core/api/microsoft.aspnetcore.builder.iapplicationbuilder):
+O método estático acima expõe o middleware através da interface [IApplicationBuilder](https://docs.microsoft.com/aspnet/core/api/microsoft.aspnetcore.builder.iapplicationbuilder):
 
 [!code-csharp[Main](middleware/sample/Culture/RequestCultureMiddlewareExtensions.cs)]
 
-The following code calls the middleware from `Configure`:
+O código seguinte chama o middleware do método `Configure`:
 
 [!code-csharp[Main](middleware/sample/Culture/Startup.cs?name=snippet1&highlight=5)]
 
-Middleware should follow the [Explicit Dependencies Principle](http://deviq.com/explicit-dependencies-principle/) by exposing its dependencies in its constructor. Middleware is constructed once per *application lifetime*. See *Per-request dependencies* below if you need to share services with middleware within a request.
+O middleware precisa seguir o [Princípio das dependências explícitas](http://deviq.com/explicit-dependencies-principle/) ao expor suas dependências em seu construtor. O middleware é construído uma vez por *tempo de vida da aplicação*. Veja avaixo *dependências por requisição* se você precisa compartilhar serviços e middleware dentro de uma resposta.
 
-Middleware components can resolve their dependencies from dependency injection through constructor parameters. [`UseMiddleware<T>`](https://docs.microsoft.com/aspnet/core/api/microsoft.aspnetcore.builder.usemiddlewareextensions#methods_summary) can also accept additional parameters directly.
+Componentes middleware podem resolver suas dependências de injeção de dependência através de parâmetros de construtores. [`UseMiddleware<T>`](https://docs.microsoft.com/aspnet/core/api/microsoft.aspnetcore.builder.usemiddlewareextensions#methods_summary) podem aceitar parâmetros adicionais diretamente.
 
-### Per-request dependencies
+### Dependências por requisição
 
-Because middleware is constructed at app startup, not per-request, *scoped* lifetime services used by middleware constructors are not  shared with other dependency-injected types during each request. If you must share a *scoped* service between your middleware and other types, add these services to the `Invoke` method's signature. The `Invoke` method can accept additional parameters that are populated by dependency injection. For example:
+Porque o middleware é construído na inicialização da aplicação, não por requisição, o *escopo* de tempo de vida dos serviços, usado pelos construtores do middleware e outros tipos, não são compartilhados com outros tipos de injeção de dependência durante cada requisição. Se voc~e precisa compartilhar um serviço *dimencionado (scoped)* entre seu middleware e outros tipos, adicione estes serviços à assinatura do método `Invoke`. O método `Invoke` pode aceitar parâmetros adicionais que são populados pela injeção de dependência. Por exemplo:
 
 ```c#
 public class MyMiddleware
@@ -226,9 +225,9 @@ public class MyMiddleware
 }
 ```
 
-## Resources
+## Recursos
 
-* [Sample code used in this doc](https://github.com/aspnet/Docs/tree/master/aspnetcore/fundamentals/middleware/sample)
-* [Migrating HTTP Modules to Middleware](../migration/http-modules.md)
-* [Application Startup](startup.md)
-* [Request Features](request-features.md)
+* [Código demonstrativo usado neste documento](https://github.com/aspnet/Docs/tree/master/aspnetcore/fundamentals/middleware/sample)
+* [Migrando módulos HTTP para Middleware](../migration/http-modules.md)
+* [Inicialização de Aplicação](startup.md)
+* [Características de Requisição](request-features.md)
