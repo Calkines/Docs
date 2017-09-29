@@ -44,27 +44,27 @@ O roteamento é conectado ao pipeline de [middleware](middleware.md) pela classe
 
 ### Coincidência de URL
 
-Coincidência de URL é o processo pelo qual o roteamento despacha uma requisição de entrada para um *handler*. Este processo é geralmente baseado em dados de entrada que foi informados no caminho URL, mas pode ser estendido para considerar qualquer informação da requisição. A habilidade de despachar requisições para diversos controladores é a chave escalonar o tamanho e a complexidade de uma aplicação.
+Coincidência de URL é o processo pelo qual o roteamento despacha uma requisição de entrada para um *handler*. Este processo é geralmente baseado em dados de entrada que foram informados no caminho URL, mas pode ser estendido para considerar qualquer informação da requisição. A habilidade de despachar requisições para diversos controladores é a chave escalonar o tamanho e a complexidade de uma aplicação.
 
-Requisições de entrada entram no `RouterMiddleware`, o qual chama o método `RouteAsync` para cada rota encontrada na sequencia. A instância de `IRouter` escolhe se *controla* a requisição ao configurar o `RouteContext` `Handler`para um `RequestDelegate` não nulo. Se um rota definir um controlador para a requisição, o processo de rota para e o controlar será invocado para processar a requisição. Se todas as rotas forem testadas e nenhum controlador for encontrado para a requisição, o middleware chama *next* e o próximo middleware no pipeline de requisições será invocado.
+Requisições de entrada entram no `RouterMiddleware`, o qual chama o método `RouteAsync` para cada rota encontrada na sequência. A instância de `IRouter` escolhe se *controla* a requisição ao configurar o `RouteContext` `Handler`para um `RequestDelegate` não nulo. Se uma rota definir um controlador para a requisição, o processo de rota para e o controlador será invocado para processar a requisição. Se todas as rotas forem testadas e nenhum controlador for encontrado para a requisição, o middleware chama *next* e o próximo middleware no pipeline de requisições será invocado.
 
 A entrada primária para `RouteAsync` é o `RouteContext` `HttpContext` associados à requisição atual. O `RouteContext.Handler` e `RouteContext` `RouteData` são saída que vão ser configuradas após a coincidência de rota.  
 
 Um coindicência durante `RouteAsync` também vai configurar as propriedades do `RouteContext.RouteData` para valores apropriados com base no término do processo de requisição. Se uma rota coindice com uma requisição, o `RouteContext.RouteData` vai conter importante informações de estado sobre o *resultado*.
 
-`RouteData` `Values` is a dictionary of *route values* produced from the route. These values are usually determined by tokenizing the URL, and can be used to accept user input, or to make further dispatching decisions inside the application.
+`RouteData` `Values` é um direcionário de *valores de rotas* produzido por uma rota. Estes valores são usualmente determinados ao transformar a URL em token, e podem ser usados para aceitar dados de entrada do usuário, ou fazer encaminhamento de decisões futuras dentro da aplicação.
 
-`RouteData` `DataTokens`  is a property bag of additional data related to the matched route. `DataTokens` are provided to support associating state data with each route so the application can make decisions later based on which route matched. These values are developer-defined and do **not** affect the behavior of routing in any way. Additionally, values stashed in data tokens can be of any type, in contrast to route values, which must be easily convertible to and from strings.
+`RouteData` `DataTokens` é um sacola de propriedades de dados relacionados a coincidência de rota. Os "DataTokens" são fornecidos para suportar a associação de dados de estado com cada rota para que o aplicativo possa tomar decisões posteriormente com base na rota correspondente. Estes valores são definidos pelo desenvolvedor e **não** afetam o compotamento do roteamento de nenhum modo. Além disso, valores escondidos em tokens de informação podem ser de qualquer tipo, diferentemente de valores de rotas, que precisam ser facilmente convertidos para texto e vice-versa.
 
-`RouteData` `Routers` is a list of the routes that took part in successfully matching the request. Routes can be nested inside one another, and the `Routers` property reflects the path through the logical tree of routes that resulted in a match. Generally the first item in `Routers` is the route collection, and should be used for URL generation. The last item in `Routers` is the route handler that matched.
+`RouteData` `Routers` é uma lista de rotas que pega a parte correta do processo de coindicência da requisição. Rotas podem ser aninhadas umas dentros das outras, e a propriedade `Routes` reflete o caminho pelo qual a árvore lógica resultou em uma coindidência. Geralmente o primeiro item no `Routers` é uma coleção de rotas, e precisa ser usado para geração de URL. O último item no `Routers` é o controlador de rota que coindidiu.
 
-### URL generation
+### Geração de URL
 
-URL generation is the process by which routing can create a URL path based on a set of route values. This allows for a logical separation between your handlers and the URLs that access them.
+Geração de URL é o processo pelo qual o roteamento pode criar um caminho URL com base no conjunto de valores de rota. Isto permite uma separação lógica entre seus controladores e as URLs que os acessam.
 
-URL generation follows a similar iterative process, but starts with user or framework code calling into the `GetVirtualPath` method of the route collection. Each *route* will then have its `GetVirtualPath` method called in sequence until a non-null `VirtualPathData` is returned.
+A geração de URL segue um processo interativo similar, mas inicia com o usuário ou o código framework fazendo uma chamada ao método `GetVirtualPath` da coleção de rota. Cada *route* então terá seu método `GetVirtualPath` chamado em sequência até que um `VirtualPathData` não nulo seja retornado.
 
-The primary inputs to `GetVirtualPath` are:
+Os dados de entrada primários para `GetVirtualPath` são:
 
 * `VirtualPathContext` `HttpContext`
 
@@ -72,27 +72,28 @@ The primary inputs to `GetVirtualPath` are:
 
 * `VirtualPathContext` `AmbientValues`
 
-Routes primarily use the route values provided by the `Values` and `AmbientValues` to decide where it is possible to generate a URL and what values to include. The `AmbientValues` are the set of route values that were produced from matching the current request with the routing system. In contrast, `Values` are the route values that specify how to generate the desired URL for the current operation. The `HttpContext` is provided in case a route needs to get services or additional data associated with the current context.
+Inicialmente rotas usam os valores de rota fornecidos pelo `Values` e `AmbientValues` para decidir onde é possível gerar um URL e quais valores incluir. `AmbientValues` são o conjunto de valores de rota que foram produzidos pela coincidência da requisição atual com o sistema de rotas. Por outro lado, `Values` são os valores de rotas que especificam como gerar a URL desejada para a operação atual. O `HttpContext`é fornecido no caso das rotas precisarem de acesso a serviços ou dados associados adicionais com o contexto atual.
 
-Tip: Think of `Values` as being a set of overrides for the `AmbientValues`. URL generation tries to reuse route values from the current request to make it easy to generate URLs for links using the same route or route values.
+Dica: Pense nos `Values` como um conjunto de sobrescritas para o `AmbientValues`. A geração de URL tenta reutilizar os valores de rota da requisição atual para tornar isso facil para gerar URLs para atalhos usando a mesma rota ou valores de rotas.
 
-The output of `GetVirtualPath` is a `VirtualPathData`. `VirtualPathData` is a parallel of `RouteData`; it contains the `VirtualPath` for the output URL as well as the some additional properties that should be set by the route.
+A saída de `GetVirtualPath` é um `VirtualPathData`. `VirtualPathData` é um paralelo de `RouteData`; isso contem o `VirtualPath` para a saída de URL como também algumas propriedade adicionais que precisam ser configuradas pela rota.
 
-The `VirtualPathData` `VirtualPath` property contains the *virtual path* produced by the route. Depending on your needs you may need to process the path further. For instance, if you want to render the generated URL in HTML you need to prepend the base path of the application.
+As propriedades `VirtualPathData` `VirtualPath` contem o *caminho vitual* produzido pela rota. Dependendo de suas necessidades você pode precisar processar o caminho em momento futuro. Por exemplo, se você  quiser renderizar a URL gerada em HTML você precisa inserir o caminho base da aplicação.
 
-The `VirtualPathData` `Router` is a reference to the route that successfully generated the URL.
+O `VirtualPathData` `Router` é uma referência à rota que gerou corretamente uma URL.
 
-The `VirtualPathData` `DataTokens` properties is a dictionary of additional data related to the route that generated the URL. This is the parallel of `RouteData.DataTokens`.
+As propriedades `VirtualPathData` `DataTokens` são um dicionário de dados relacionados adicionais para a rota que gerou a URL. Este é o paralelo de `RouteData.DataTokens`.
 
-### Creating routes
 
-Routing provides the `Route` class as the standard implementation of `IRouter`. `Route` uses the *route template* syntax to define patterns that will match against the URL path when `RouteAsync` is called. `Route` will use the same route template to generate a URL when `GetVirtualPath` is called.
+### Criando rotas
 
-Most applications will create routes by calling `MapRoute` or one of the similar extension methods defined on `IRouteBuilder`. All of these methods will create an instance of `Route` and add it to the route collection.
+O roteamento fornece a classe `Route` como uma implementação padrão de `IRouter`. `Route` usa uma sintaxe de *modelo de rota* para definir matrizes que vão coincidir nos caminhos URL quando `RouteAsync` for chamado. `Route` vai usar o mesmo modelo de rota para gerar um URL quando `GetVirtualPath` for chamado.
 
-Note: `MapRoute` doesn't take a route handler parameter - it only adds routes that will be handled by the `DefaultHandler`. Since the default handler is an `IRouter`, it may decide not to handle the request. For example, ASP.NET MVC is typically configured as a default handler that only handles requests that match an available controller and action. To learn more about routing to MVC, see [Routing to Controller Actions](../mvc/controllers/routing.md).
+A maioria das aplicações vai criar rotas ao chamar `MapRoute` ou um método de extensão similar definido no `IRouteBuilder`. Todos estes métodos vão criar uma instância de `Route` e adicioná-la à coleção de rota.
 
-This is an example of a `MapRoute` call used by a typical ASP.NET MVC route definition:
+Nota: `MapRoute` não recebe um parâmetro controlador de rota - ele apenas adiciona rotas que serão controladas por `DefaultHandler`. Já que o *default handler* é um `IRouter`, ele pode decidir não controlar a requisição. Por exemplo, o ASP.NET MVC é geralmete configurado como um controlador padrão que somente controla requisições que coincidam com um *controller* e uma ação disponíveis. Para aprender mais sobre o roteamento para MVC, veja [Roteamento para Ações de Controle](../mvc/controllers/routing.md).
+
+Este é um exemplo de uma chamada `MapRoute` usada pela definição típica de rota do ASP.NET MVC:
 
 ```csharp
 routes.MapRoute(
@@ -100,13 +101,13 @@ routes.MapRoute(
     template: "{controller=Home}/{action=Index}/{id?}");
 ```
 
-This template will match a URL path like `/Products/Details/17` and extract the route values `{ controller = Products, action = Details, id = 17 }`. The route values are determined by splitting the URL path into segments, and matching each segment with the *route parameter* name in the route template. Route parameters are named. They are defined by enclosing the parameter name in braces `{ }`.
+Este modelo vai coincidir o caminho URL como `/Produtos/Detalhes/17` e extrair os valores de rota `{controller = Produtos, action = Detalhes, id = 17}`. Os valores de rota são determinados pela divisão do caminho URL em seguimentos, e a coincidência de cada segmento com o nome do *parâmetro de rota* no modelo de rota apresenta acima. Parâmetros de rota são nomeados. Eles são definidos quando os cercamos com chaves `{ }`;
 
-The template above could also match the URL path `/` and would produce the values `{ controller = Home, action = Index }`. This happens because the `{controller}` and `{action}` route parameters have default values, and the `id` route parameter is optional. An equals `=` sign followed by a value after the route parameter name defines a default value for the parameter. A question mark `?` after the route parameter name defines the parameter as optional. Route parameters with a default value *always* produce a route value when the route matches - optional parameters will not produce a route value if there was no corresponding URL path segment.
+O modelo acima também pode coincidir o caminho URL `/` and produziria os valores `{ controller = Home, action = Index}`. Isto acontece porque os parâmetros de rota `{controller}` e `{action}` possuem valores padrões, e o parâmetro de rota `id` é opcional. Um sinal de igual `=` seguido por um valor, depois de um parâmetro de rota, define um valor padrão para um parãmetro. Uma marcação de interrogação `?` depois do parâmetro de rota define um parâmetro opcional. Parâmetros de rota com valores padrões *sempre* produzem um valor de rota quando há coincidência da rota - parâmetros opcionais não produzirão um valor de rota se não houver correspondência no segmento de caminho de URL. 
 
-See [route-template-reference](#route-template-reference) for a thorough description of route template features and syntax.
+Veja [Referência de modelo de rota](#route-template-reference) para um descrião detalhada das funcionalidades do modelo de rota e de sua sintaxe.
 
-This example includes a *route constraint*:
+Este exemplo incluí um *limitação de rota*:
 
 ```csharp
 routes.MapRoute(
