@@ -18,11 +18,9 @@ uid: fundamentals/routing
 
 Por [Ryan Nowak](https://github.com/rynowak), [Steve Smith](https://ardalis.com/), e [Rick Anderson](https://twitter.com/RickAndMSFT)
 
-A funcionalidade de roteamento é responsável por mapear um requisição de entrada para um controlador de rota. Rotas são definidas na aplicação ASP.NET e configuradas quando acontece a inicialização. Uma rota pode opcionalmente extrair valores de uma URL contida em uma requisição, e estes valores podem ser usados para processamento de requisição. Usando informações de rota da aplicação ASP.NET, a funcionalidade de roteamento também é capaz de gerar URLs que mapeiam os controladores de rota. Portanto, o roteamento pode encontrar um controlardor de rota com base na URL, ou na 
+A funcionalidade de roteamento é responsável por mapear um requisição de entrada e por um controlador sua rota. Rotas são definidas na aplicação ASP.NET e configuradas quando acontece a inicialização. Uma rota pode opcionalmente extrair valores de uma URL contida em uma requisição, e estes valores podem ser usados para processamento de requisição. Usando informações de rota da aplicação ASP.NET, a funcionalidade de roteamento também é capaz de gerar URLs que mapeiam os controladores de rota. Portanto, o roteamento pode encontrar um controlardor de rota com base na URL, ou uma URL correspondente a um determinado manipulador de rotas, leavando em consideração as informações do manipulador de rotas.
 
-Routing functionality is responsible for mapping an incoming request to a route handler. Routes are defined in the ASP.NET app and configured when the app starts up. A route can optionally extract values from the URL contained in the request, and these values can then be used for request processing. Using route information from the ASP.NET app, the routing functionality is also able to generate URLs that map to route handlers. Portanto, o roteamento pode encontrar um manipulador de rotas com base em uma URL, ou uma URL correspondente a um determinado manipulador de rotas, leavando em consideração as informações do manipulador de rotas.
-
->[!IMPORTANT]
+>[!IMPORTANTE]
 > Este documento cobre cobre o baixo nível de roteamento do ASP.NET Core. Para roteamento ASP.NET Core MVC, veja [Roteamento para Ações de Controle](../mvc/controllers/routing.md)
 
 [Visualizar ou baixar códigos demonstrativos](https://github.com/aspnet/Docs/tree/master/aspnetcore/fundamentals/routing/sample)
@@ -32,19 +30,19 @@ Routing functionality is responsible for mapping an incoming request to a route 
 O roteamento usa *routes* (implementações do [IRouter](https://docs.microsoft.com/aspnet/core/api/microsoft.aspnetcore.routing.irouter)) 
 para:
 
-* mapear requisições de entrada para *route handlers*
+* mapear requisições de entrada para *controladores de rota*
 
 * gerar URLs usada nas respostas
 
-Geralmente, uma aplicação possui uma única coleção de rotas. Quando uma requisição chega, a coleção de rotas é processada. A requisição de netrada procura por um rota que coincida com a URL requisitada ao chamar o método `RouteAsync` em cada rota disponível na coleção de rotas. Por outro lado, a respota pode usar o roteamento para gerar URLs (por exemplo, para redirecimento ou atalhos) baseadas nas informações de rota, e, assim, deixar as URL fixas de lado, o que ajuda na manutenibilidade.
+Geralmente, uma aplicação possui uma única coleção de rotas. Quando uma requisição chega, a coleção de rotas é processada. A requisição de entrada procura por um rota que coincida com a URL requisitada ao chamar o método `RouteAsync` em cada rota disponível na coleção de rotas. Por outro lado, a respota pode usar o roteamento para gerar URLs (por exemplo, para redirecimento ou atalhos) baseadas nas informações de rota, e, assim, deixar as URL fixas de lado, o que ajuda na manutenibilidade.
 
-O roteamento é conectado ao pipeline de [middleware](middleware.md) pela classe `RouterMiddleware`. [ASP.NET MVC](../mvc/overview.md) adiciona o roteamento ao pipeline de middleware como parte de sua configuração. Para aprender sobre como usar o roteamento como um componente isolado, veja [usando-roteamento-middleware](#using-routing-middleware).
+O roteamento é **conectado ao pipeline** de [middleware](middleware.md) pela classe `RouterMiddleware`. [ASP.NET MVC](../mvc/overview.md) adiciona o roteamento ao pipeline de middleware como parte de sua configuração. Para aprender sobre como usar o roteamento como um componente isolado, veja [usando-roteamento-middleware](#using-routing-middleware).
 
 <a name=url-matching-ref></a>
 
 ### Coincidência de URL
 
-Coincidência de URL é o processo pelo qual o roteamento despacha uma requisição de entrada para um *handler*. Este processo é geralmente baseado em dados de entrada que foram informados no caminho URL, mas pode ser estendido para considerar qualquer informação da requisição. A habilidade de despachar requisições para diversos controladores é a chave escalonar o tamanho e a complexidade de uma aplicação.
+Coincidência de URL é o processo pelo qual o roteamento despacha uma requisição de entrada para um *controlador* (handler). Este processo é geralmente baseado em dados de entrada que foram informados no caminho URL, mas pode ser estendido para considerar qualquer informação da requisição. A habilidade de despachar requisições para diversos controladores é a chave escalonar o tamanho e a complexidade de uma aplicação.
 
 Requisições de entrada entram no `RouterMiddleware`, o qual chama o método `RouteAsync` para cada rota encontrada na sequência. A instância de `IRouter` escolhe se *controla* a requisição ao configurar o `RouteContext` `Handler`para um `RequestDelegate` não nulo. Se uma rota definir um controlador para a requisição, o processo de rota para e o controlador será invocado para processar a requisição. Se todas as rotas forem testadas e nenhum controlador for encontrado para a requisição, o middleware chama *next* e o próximo middleware no pipeline de requisições será invocado.
 
@@ -56,7 +54,7 @@ Um coindicência durante `RouteAsync` também vai configurar as propriedades do 
 
 `RouteData` `DataTokens` é um sacola de propriedades de dados relacionados a coincidência de rota. Os "DataTokens" são fornecidos para suportar a associação de dados de estado com cada rota para que o aplicativo possa tomar decisões posteriormente com base na rota correspondente. Estes valores são definidos pelo desenvolvedor e **não** afetam o compotamento do roteamento de nenhum modo. Além disso, valores escondidos em tokens de informação podem ser de qualquer tipo, diferentemente de valores de rotas, que precisam ser facilmente convertidos para texto e vice-versa.
 
-`RouteData` `Routers` é uma lista de rotas que pega a parte correta do processo de coindicência da requisição. Rotas podem ser aninhadas umas dentros das outras, e a propriedade `Routes` reflete o caminho pelo qual a árvore lógica resultou em uma coindidência. Geralmente o primeiro item no `Routers` é uma coleção de rotas, e precisa ser usado para geração de URL. O último item no `Routers` é o controlador de rota que coindidiu.
+`RouteData` `Routers` é uma lista de rotas que pega a parte correta do processo de coindicência da requisição. Rotas podem ser aninhadas umas dentros das outras, e a propriedade `Routers` reflete o caminho pelo qual a árvore lógica resultou em uma coindidência. Geralmente o primeiro item no `Routers` é uma coleção de rotas, e precisa ser usado para geração de URL. O último item no `Routers` é o controlador de rota que coindidiu.
 
 ### Geração de URL
 
@@ -72,7 +70,7 @@ Os dados de entrada primários para `GetVirtualPath` são:
 
 * `VirtualPathContext` `AmbientValues`
 
-Inicialmente rotas usam os valores de rota fornecidos pelo `Values` e `AmbientValues` para decidir onde é possível gerar um URL e quais valores incluir. `AmbientValues` são o conjunto de valores de rota que foram produzidos pela coincidência da requisição atual com o sistema de rotas. Por outro lado, `Values` são os valores de rotas que especificam como gerar a URL desejada para a operação atual. O `HttpContext`é fornecido no caso das rotas precisarem de acesso a serviços ou dados associados adicionais com o contexto atual.
+Inicialmente rotas usam os valores de rota fornecidos pelo `Values` e `AmbientValues` para decidir onde é possível gerar uma URL e quais valores incluir. `AmbientValues` são o conjunto de valores de rota que foram produzidos pela coincidência da requisição atual com o sistema de rotas. Por outro lado, `Values` são os valores de rotas que especificam como gerar a URL desejada para a operação atual. O `HttpContext`é fornecido no caso das rotas precisarem de acesso a serviços ou dados associados adicionais com o contexto atual.
 
 Dica: Pense nos `Values` como um conjunto de sobrescritas para o `AmbientValues`. A geração de URL tenta reutilizar os valores de rota da requisição atual para tornar isso facil para gerar URLs para atalhos usando a mesma rota ou valores de rotas.
 
@@ -115,11 +113,12 @@ routes.MapRoute(
     template: "{controller=Home}/{action=Index}/{id:int}");
 ```
 
-This template will match a URL path like `/Products/Details/17`, but not `/Products/Details/Apples`. The route parameter definition `{id:int}` defines a *route constraint* for the `id` route parameter. Route constraints implement `IRouteConstraint` and inspect route values to verify them. In this example the route value `id` must be convertible to an integer. See [route-constraint-reference](#route-constraint-reference) for a more detailed explanation of route constraints that are provided by the framework.
+Este modelo vai coincidir um caminho de URL como `/Produtos/Detalhes/17`, mas não `/Produtos/Detalhes/Apples`. A definição do parâmetro de rota `{id:int}` configura um *limite de rota* para o parâmetro de rota `id`. Limitações de rota implementam `IRouteConstraint` e inspecionam os valores da rota para verificá-los. Neste exemplo o valor de rota `id` precisa ser convertido para um inteiro. Veja [Referência de limitações de rota](#route-constraint-reference) para uma explicação mais detalhada sobre limitações de rota que são fornecidas pelo framework.
 
-Additional overloads of `MapRoute` accept values for `constraints`, `dataTokens`, and `defaults`. These additional parameters of `MapRoute` are defined as type `object`. The typical usage of these parameters is to pass an anonymously typed object, where the property names of the anonymous type match route parameter names.
+Sobrecargas adicionais do `MapRoute` aceitam valores para `constraints`, `dataTokens`, e `defaults`. Estes parâmetros adicionais do `MapRoute` são definidos como tipo `object`. O uso comum destes parâmetros é passar um objeto de tipo anônimo, no qual os nomes de propriedade do tipo anônimo coincidam com o nome dos parâmetros da rota.
 
-The following two examples create equivalent routes:
+Os dois exemplos seguintes criam rotas equivalentes:
+
 
 ```csharp
 routes.MapRoute(
@@ -132,9 +131,9 @@ routes.MapRoute(
     template: "{controller=Home}/{action=Index}/{id?}");
 ```
 
-Tip: The inline syntax for defining constraints and defaults can be more convenient for simple routes. However, there are features such as data tokens which are not supported by inline syntax.
+Dica: A sintáxe de linha para definição de limites e padrões pode ser mais conveniente para rotas simples. Contudo, existem recursos como os tokens de dados que não são suportados por essa sintaxe.
 
-This example demonstrates a few more features:
+Este exemplo demonstra mais alguns recursos:
 
 ```csharp
 routes.MapRoute(
@@ -143,9 +142,9 @@ routes.MapRoute(
   defaults: new { controller = "Blog", action = "ReadArticle" });
 ```
 
-This template will match a URL path like `/Blog/All-About-Routing/Introduction` and will extract the values `{ controller = Blog, action = ReadArticle, article = All-About-Routing/Introduction }`. The default route values for `controller` and `action` are produced by the route even though there are no corresponding route parameters in the template. Default values can be specified in the route template. The `article` route parameter is defined as a *catch-all* by the appearance of an asterisk `*` before the route parameter name. Catch-all route parameters capture the remainder of the URL path, and can also match the empty string.
+Este modelo vai coincidir um caminho de URL `/Blog/All-About-Routing/Introduction` e extraíra os valores `{controller = Blog, action = ReadArticle, article = All-About-Routing/Introduction}`. Os valores padrões de rota para `controller` e `action` são produzidos pela rota mesmo quando não exista parâmetros de rota correspondente no modelo. Valores padrões podem ser especificados em um modelo de rota. O parâmetro de rota `article` é definido como um *pegar-tudo* pela presença do asterisco antes do nome do parâmetro de rota. Parêtros do tipo *catch-all* (pega-tudo) capturam o restante do caminho URL e também podem coincidir uma string vazia.
 
-This example adds route constraints and data tokens:
+Este exemplo adiciona uma limitante de rota e tokens de dados:
 
 ```csharp
 routes.MapRoute(
@@ -156,19 +155,19 @@ routes.MapRoute(
     dataTokens: new { locale = "en-US" });
 ```
 
-This template will match a URL path like `/Products/5` and will extract the values `{ controller = Products, action = Details, id = 5 }` and the data tokens `{ locale = en-US }`.
+Este modelo vai coincidir o caminho de URL `/Products/5` e vai extrair os valores `{controller = Products, action = Details, id = 5}`, além dos tokens de dados `{locale = en-US}`.
 
-![Locals Windows tokens](routing/_static/tokens.png)
+![Tokens locais do Windows](routing/_static/tokens.png)
 
 <a name=id1></a>
 
-### URL generation
+### Geração de URL
 
-The `Route` class can also perform URL generation by combining a set of route values with its route template. This is logically the reverse process of matching the URL path.
+A classe `Route` também pode realizar a geração de URL ao combinar um conjunto de valores de rota com seus modelos de rota. Isso é logicamente o processo inverso do coincidência de caminho de URL.
 
-Tip: To better understand URL generation, imagine what URL you want to generate and then think about how a route template would match that URL. What values would be produced? This is the rough equivalent of how URL generation works in the `Route` class.
+Dica: Para entender melhor a geração de URL, imagine a URL que você gostaria de gerar e então pense sobre como o modelo de rota coincidiria aquela URL. Quais valores deverão ser produzidos? Isto é a mesma forma de como a geração de URL funciona em uma classe `Route`.
 
-This example uses a basic ASP.NET MVC style route:
+Este exemplo usa um estilo básico de rotas ASP.NET MVC:
 
 ```csharp
 routes.MapRoute(
@@ -176,27 +175,27 @@ routes.MapRoute(
     template: "{controller=Home}/{action=Index}/{id?}");
 ```
 
-With the route values `{ controller = Products, action = List }`, this route will generate the URL `/Products/List`. The route values are substituted for the corresponding route parameters to form the URL path. Since `id` is an optional route parameter, it's no problem that it doesn't have a value.
+Com os valores de rota `{ controller = Products, action = List }`, esta rota vai gerar a URL `/Products/List`. Os valores de rota são substituídos pelos correspondentes parâmetros de rota formando o caminho URL. Já que o `id` é um parâmetro de rota opcional, ele não há problema deixá-lo sem um valor. 
 
-With the route values `{ controller = Home, action = Index }`, this route will generate the URL `/`. The route values that were provided match the default values so the segments corresponding to those values can be safely omitted. Note that both URLs generated would round-trip with this route definition and produce the same route values that were used to generate the URL.
+Com os valores de rota `{ controller = Home, action = Index }`, esta rota será gerada a URL `/`. Os valores de rota que foram fornecidos coincidem com os valor padrões, então os seguimentos correspondentes àqueles valores podem ser seguramente omitidos. Perceba que ambas URLs geradas vão e voltam nesta definição de rota e produzem os mesmos valores de rota que foram usados para gerar a URL.
 
-Tip: An app using ASP.NET MVC should use `UrlHelper` to generate URLs instead of calling into routing directly.
+Dica: Uma aplicação usando ASP.NET MVC precisa usar `UrlHelper` para gerar URLs em vez de chamar as rotas diretamente.
 
-For more details about the URL generation process, see [url-generation-reference](#url-generation-reference).
+Para mais detalhes sobre o processo de geração de URL, veja [Referência à geração de URL](#url-generation-reference).
 
-## Using Routing Middleware
+## Usando o Middleware de Roteamento
 
-Add the NuGet package "Microsoft.AspNetCore.Routing".
+Adicione o pacote NuGet "Microsoft.AspNetCore.Routing".
 
-Add routing to the service container in *Startup.cs*:
+Adicione o roteamento ao recipiente de serviço no *Startup.cs*:
 
 [!code-csharp[Main](../fundamentals/routing/sample/RoutingSample/Startup.cs?highlight=3&start=11&end=14)]
 
-Routes must be configured in the `Configure` method in the `Startup` class. The sample below uses these APIs:
+As rotas precisam ser configuradas no método `Configure` da classe `Startup`. A demonstração abaixo usa estas APIs:
 
 * `RouteBuilder`
 * `Build`
-* `MapGet`  Matches only HTTP GET requests
+* `MapGet`  Faz o processo de coincidência apenas para requisições HTTP GET
 * `UseRouter`
 
 <!-- literal_block {"xml:space": "preserve", "source": "fundamentals/routing/sample/RoutingSample/Startup.cs", "ids": [], "linenos": false, "highlight_args": {"linenostart": 1}} -->
@@ -231,9 +230,9 @@ public void Configure(IApplicationBuilder app, ILoggerFactory loggerFactory)
 }
 ```
 
-The table below shows the responses with the given URIs.
+A tabela abaixo mostra as resposta com as URIs determinadas:
 
-| URI | Response  |
+| URI | Resposta  |
 | ------- | -------- |
 | /package/create/3  | Hello! Route values: [operation, create], [id, 3] |
 | /package/track/-3  | Hello! Route values: [operation, track], [id, -3] |
@@ -243,9 +242,9 @@ The table below shows the responses with the given URIs.
 | POST /hello/Joe | \<Fall through, matches HTTP GET only> |
 | GET /hello/Joe/Smith | \<Fall through, no match> |
 
-If you are configuring a single route, call `app.UseRouter` passing in an `IRouter` instance. You won't need to call `RouteBuilder`.
+Se você estiver configurando apenas uma rota, chame o `app.UseRouter` passando uma instãncia de `IRoute`. Você não precisará chamar `RouteBuilder`.
 
-The framework provides a set of extension methods for creating routes such as:
+O framework fornece um conjunto de métodos de extensão para criação de rotas, como:
 
 * `MapRoute`
 * `MapGet`
@@ -254,43 +253,43 @@ The framework provides a set of extension methods for creating routes such as:
 * `MapDelete`
 * `MapVerb`
 
-Some of these methods such as `MapGet` require a `RequestDelegate` to be provided. The `RequestDelegate` will be used as the *route handler* when the route matches. Other methods in this family allow configuring a middleware pipeline which will be used as the route handler. If the *Map* method doesn't accept a handler, such as `MapRoute`, then it will use the `DefaultHandler`.
+Alguns destes métodos como o `MapGet` requer um `RequestDelegate` para ser fornecido. O `RequestDelegate` será usado como o *controlador de rota* quando uma rota for encontrada. Outros método nesta familia permitem configurar um pipeline middleware, que será usado como o controlador de rota. Se o método *Map* não aceitar um controlador, como o `MapRoute`, então ele usará o `DefaultHandler`.
 
-The `Map[Verb]` methods use constraints to limit the route to the HTTP Verb in the method name. For example, see [MapGet](https://github.com/aspnet/Routing/blob/1.0.0/src/Microsoft.AspNetCore.Routing/RequestDelegateRouteBuilderExtensions.cs#L85-L88) and [MapVerb](https://github.com/aspnet/Routing/blob/1.0.0/src/Microsoft.AspNetCore.Routing/RequestDelegateRouteBuilderExtensions.cs#L156-L180).
+Os métodos `Map[Verb]` usam *constraints* para limitar a rota para um Verb HTTP no nome do método. Por exemplo, veja [MapGet](https://github.com/aspnet/Routing/blob/1.0.0/src/Microsoft.AspNetCore.Routing/RequestDelegateRouteBuilderExtensions.cs#L85-L88) e [MapVerb](https://github.com/aspnet/Routing/blob/1.0.0/src/Microsoft.AspNetCore.Routing/RequestDelegateRouteBuilderExtensions.cs#L156-L180).
 
-## Route Template Reference
+## Referência de modelo de rotas
 
-Tokens within curly braces (`{ }`) define *route parameters* which will be bound if the route is matched. You can define more than one route parameter in a route segment, but they must be separated by a literal value. For example `{controller=Home}{action=Index}` would not be a valid route, since there is no literal value between `{controller}` and `{action}`. These route parameters must have a name, and may have additional attributes specified.
+Tokens dentro de chaves (`{ }`) definem *parâmetros de rota* que serão limitados se a rota coincidir. Você pode definir mais do que um parâmetro de rota em um segmento de rota, mas eles precisam estar separados por um valor literal. Por exemplo `{controller=Home}{action=Index}` não seria uma rota válida, já que não existe valor literal entre `{controller}` e `{action}`. Estes parâmetros de rota precisam ter um nome, e podem ter atributos adicionais especificados.
+ 
+ Texto literal diferente de parâmetros de rota (por exemplo, `{id}`) e os separadores de caminho `/` precisam coincidir com o texto da URL. A coincidência de texto é *case-**in**sensitive* e representação decodificada do caminho URL. Para coincidir o delimitador de parâmetro de rota literal `{` ou `}`, use o caracter de escape repetindo o delimitador (`{{` ou `}}`).
 
-Literal text other than route parameters (for example, `{id}`) and the path separator `/` must match the text in the URL. Text matching is case-insensitive and based on the decoded representation of the URLs path. To match the literal route parameter delimiter `{` or  `}`, escape it by repeating the character (`{{` or `}}`).
-
-URL patterns that attempt to capture a filename with an optional file extension have additional considerations. For example, using the template `files/{filename}.{ext?}` - When both `filename` and `ext` exist, both values will be populated. If only `filename` exists in the URL, the route matches because the trailing period `.` is  optional. The following URLs would match this route:
+Matrizes de URL, que tentam capturar um nome de arquivo com extensão opcional de arquivo, possuem considerações adicionais. Por exemplo, usar o modelo `files/{filename}.{ext?}` - Quando ambos `filename` e `ext` existirem, os dois valores serão populados. Se apenas `filename` existir na URL, haverá coincidência de rota porque o ponto final `.` é opcional. As URLs seguintes coincidiriam com esta rota:
 
 * `/files/myFile.txt`
 * `/files/myFile.`
 * `/files/myFile`
 
-You can use the `*` character as a prefix to a route parameter to bind to the rest of the URI - this is called a *catch-all* parameter. For example, `blog/{*slug}` would match any URI that started with `/blog` and had any value following it (which would be assigned to the `slug` route value). Catch-all parameters can also match the empty string.
+Você pode usar o caracter `*`  como prefixo para um parâmetro de rota para o vincular ao resto da URI - isso é chamado de parãmetro *catch-all*. Por exemplo, `blog/{*slug}` coincidiria quaisquer URIs que fossem iniciadas com `/blog` e que tivessem qualquer valor na sequência (o qual seria atribuído ao valor de rota `slug`). Parâmetros *cacth-all* (pega-tudo) podem ser coincidir com texto em branco.
 
-Route parameters may have *default values*, designated by specifying the default after the parameter name, separated by an `=`. For example, `{controller=Home}` would define `Home` as the default value for `controller`. The default value is used if no value is present in the URL for the parameter. In addition to default values, route parameters may be optional (specified by appending a `?` to the end of the parameter name, as in `id?`). The difference between optional and "has default" is that a route parameter with a default value always produces a value; an optional parameter has a value only when one is provided.
+Parâmetros de rota podem ter *valores padrões*, designados ao especificar o padrão após o nome do parâmetro, separado por um sinal de `=`. Por exemplo, `controller=Home` definiria `Home` como o valor padrão para o `controller`. O valor padrão é usado se nenhum valor estiver presente na URL para o parâmetro. Além disso, parâmetros de rota podem ser opcionais (incluíndo um ponto de interrogação `?` ao final do nome do parâmetro, assim `id?`). A diferença entre o opcional e o "padrão" é que um parâmetro de rota com um valor padrão sempre produz um valor; entquanto um parâmetro adiconal somente terá um valor se este for informado.
 
-Route parameters may also have constraints, which must match the route value bound from the URL. Adding a colon `:` and constraint name after the route parameter name specifies an *inline constraint* on a route parameter. If the constraint requires arguments those are provided enclosed in parentheses `( )` after the constraint name. Multiple inline constraints can be specified by appending another colon `:` and constraint name. The constraint name is passed to the `IInlineConstraintResolver` service to create an instance of `IRouteConstraint` to use in URL processing. For example, the route template `blog/{article:minlength(10)}` specifies the
-`minlength` constraint with the argument `10`. For more description route constraints, and a listing of the constraints provided by the framework, see [route-constraint-reference](#route-constraint-reference).
+Parâmetros de rota podem ser limitantes, os quais precisam coincidir com o valor da rota para encontrar a URL. Adicionando dois pontos `:` e o nome do limitante após o nome do parâmetro de rota especificamos um *limitante de linha* em um parâmetro de rota. Se o limitante precisar daqueles argumentos de forma *required*, forneça-os cercados por parênteses depois do nome do limitante. Múltiplos limitantes de linha podem ser especificados ao incluir outro `:` e o nome do limitante. O nome do limitante é passado para o serviço `IInlineConstraintResolver` para criar uma instãncia de `IRouterContraint` para ser usado na URL em processamento. Por exemplo, o modelo de rota `blog/{article:minlength(10)}` especifica o limitante `minlength` com o argumento `10`. Para mais detalhes sobre limitantes de rota, e uma lista de provedores de limitantes do framework, veja [Referência de limitantes de rota](#route-constraint-reference).
 
-The following table demonstrates some route templates and their behavior.
+A tabela seguinte demonstra alguns modelos de rota e seus comportamentos.
 
-| Route Template | Example Matching URL | Notes |
+| Modelo de Rota | Exemplo de coincidência de URL | Notas |
 | -------- | -------- | ------- |
-| hello  | /hello  | Only matches the single path `/hello` |
-| {Page=Home} | / | Matches and sets `Page` to `Home` |
-| {Page=Home}  | /Contact  | Matches and sets `Page` to `Contact` |
+| hello  | /hello  | Coincide apenas um único caminho `/hello` |
+| {Page=Home} | / | Coincide e configura `Page` para `Home` |
+| {Page=Home}  | /Contact  | | Coincide e configura `Page` para `Contact` |
 | {controller}/{action}/{id?} | /Products/List | Maps to `Products` controller and `List`  action |
 | {controller}/{action}/{id?} | /Products/Details/123  |  Maps to `Products` controller and  `Details` action.  `id` set to 123 |
 | {controller=Home}/{action=Index}/{id?} | /  |  Maps to `Home` controller and `Index`  method; `id` is ignored. |
 
-Using a template is generally the simplest approach to routing. Constraints and defaults can also be specified outside the route template.
+Usar um modelo é geralmente a maneira mais simples de criar rotas. Limitantes e padrões também podem ser especificadas fora do modelo de rota.
 
-Tip: Enable [Logging](logging.md) to see how the built in routing implementations, such as `Route`, match requests.
+Dica: Habilite [Logging](logging.md) para ver como implementações de rotas do framework, como `Route`, coincidem requisições.
+
 
 ## Route Constraint Reference
 
