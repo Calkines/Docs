@@ -18,7 +18,7 @@ uid: fundamentals/routing
 
 Por [Ryan Nowak](https://github.com/rynowak), [Steve Smith](https://ardalis.com/), e [Rick Anderson](https://twitter.com/RickAndMSFT)
 
-A funcionalidade de roteamento é responsável por mapear um requisição de entrada e por um controlador sua rota. Rotas são definidas na aplicação ASP.NET e configuradas quando acontece a inicialização. Uma rota pode opcionalmente extrair valores de uma URL contida em uma requisição, e estes valores podem ser usados para processamento de requisição. Usando informações de rota da aplicação ASP.NET, a funcionalidade de roteamento também é capaz de gerar URLs que mapeiam os controladores de rota. Portanto, o roteamento pode encontrar um controlardor de rota com base na URL, ou uma URL correspondente a um determinado manipulador de rotas, leavando em consideração as informações do manipulador de rotas.
+A funcionalidade de roteamento é responsável por mapear uma requisição de entrada para um controlador de rota. Rotas são definidas na aplicação ASP.NET e configuradas quando acontece a inicialização. Uma rota pode opcionalmente extrair valores de uma URL contida em uma requisição, e estes valores podem ser usados para processamento de requisição. Usando informações de rota da aplicação ASP.NET, a funcionalidade de roteamento também é capaz de gerar URLs que mapeiam os controladores de rota. Portanto, o roteamento pode encontrar um controlardor de rota com base na URL, ou uma URL correspondente a um determinado manipulador de rotas, leavando em consideração as informações do manipulador de rotas.
 
 >[!IMPORTANTE]
 > Este documento cobre cobre o baixo nível de roteamento do ASP.NET Core. Para roteamento ASP.NET Core MVC, veja [Roteamento para Ações de Controle](../mvc/controllers/routing.md)
