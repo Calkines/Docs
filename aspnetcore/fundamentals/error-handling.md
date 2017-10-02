@@ -13,44 +13,46 @@ ms.prod: asp.net-core
 uid: fundamentals/error-handling
 ms.custom: H1Hack27Feb2017
 ---
-# Introduction to Error Handling in ASP.NET Core
 
-By [Steve Smith](https://ardalis.com/) and [Tom Dykstra](https://github.com/tdykstra/)
+# Introdução à Manipulação de Erro no ASP.NET Core
 
-This article covers common appoaches to handling errors in ASP.NET Core apps.
+Por [Steve Smith](https://ardalis.com/) e [Tom Dykstra](https://github.com/tdykstra/)
 
-[View or download sample code](https://github.com/aspnet/Docs/tree/master/aspnetcore/fundamentals/error-handling/sample)
+Este artigo cobre as abordagens comuns para manipulação de erros em aplicações ASP.NET Core.
 
-## The developer exception page
+[Visualizar ou baixar código demonstrativo](https://github.com/aspnet/Docs/tree/master/aspnetcore/fundamentals/error-handling/sample)
 
-To configure an app to display a page that shows detailed information about exceptions, install the `Microsoft.AspNetCore.Diagnostics` NuGet package and add a line to the [Configure method in the Startup class](startup.md):
+## A página de exceções do desenvolvedor
+
+Para configurar uma aplicação para exibir a página que mostra informações detalhadas sobre exceções, instale o pacote NuGet `Microsoft.AspNetCore.Diagnostics` e adicione uma linha para o [Método de configuração na classe Startup](startup.md):
 
 [!code-csharp[Main](error-handling/sample/Startup.cs?name=snippet_DevExceptionPage&highlight=7)]
 
-Put `UseDeveloperExceptionPage` before any middleware you want to catch exceptions in, such as `app.UseMvc`.
+Coloque `UseDeveloperExceptionPage` antes de qualquer middleware que você queira armazenar exceções, como o `app.UseMvc`.
 
->[!WARNING]
-> Enable the developer exception page **only when the app is running in the Development environment**. You don't want to share detailed exception information publicly when the app runs in production. [Learn more about configuring environments](environments.md).
 
-To see the developer exception page, run the sample application with the environment set to `Development`, and add `?throw=true` to the base URL of the app. The page includes several tabs with information about the exception and the request. The first tab includes a stack trace. 
+>[!AVISO]
+> Habilite a página de exceções do desenvolvedor **somente quando a aplicação estiver executando no ambiente de Desenvolvimento**. Você não quer compartilhar informações de exceções detalhadas publicamente quando o app rodar em produção. [Aprenda mais sobre configuração de ambientes](environments.md).
 
-![Stack trace](error-handling/_static/developer-exception-page.png)
+Para ver a página de exceção do desenvolvedor, execute a aplicação demonstrativa com o ambiente configurado para `Development`, e adicione `?throw=true` para a URL base da aplicação. A page inclui diversas abas com informações sobre exceção e requisição. A primeira aba inclui um rastreameto da pilha.
 
-The next tab shows the query string parameters, if any.
+![Rastreamento de pilha](error-handling/_static/developer-exception-page.png)
 
-![Query string parameters](error-handling/_static/developer-exception-page-query.png)
+A próxima aba mostra os parâmetros da query string, se existirem.
 
-This request didn't have any cookies, but if it did, they would appear on the **Cookies** tab. You can see the headers that were passed in the last tab.
+![Parâmetros da Query String](error-handling/_static/developer-exception-page-query.png)
 
-![Headers](error-handling/_static/developer-exception-page-headers.png)
+Esta requisição não possui nenhum cookie, mas se possuisse, eles apareceriam na aba **Cookies**. Você pode ver o cabeçalho que foi passado na última aba.
 
-## Configuring a custom exception handling page
+![Cabeçalhos](error-handling/_static/developer-exception-page-headers.png)
 
-It's a good idea to configure an exception handler page to use when the app is not running in the `Development` environment.
+## Configurando um página de controle de exceção customizada
+
+É uma boa ideia configurar uma página de controle de exceção customizada quando a aplicação não estiver sendo executada no ambiente de `Development`.
 
 [!code-csharp[Main](error-handling/sample/Startup.cs?name=snippet_DevExceptionPage&highlight=11)]
 
-In an MVC app, don't explicitly decorate the error handler action method with HTTP method attributes, such as `HttpGet`. Using explicit verbs could prevent some requests from reaching the method.
+Em uma aplicação MVC, não decore explicitamente o método de ação do controlador de erro com o atributo de método HTTP, como um `HttpGet`. Use explicitamente verbos para previnir alguns requisições de chegarem ao método.
 
 ```csharp
 [Route("/Error")]
@@ -60,19 +62,19 @@ public IActionResult Index()
 }
 ```
 
-## Configuring status code pages
+## Configurando as página de código de status
 
-By default, your app will not provide a rich status code page for HTTP status codes such as 500 (Internal Server Error) or 404 (Not Found). You can configure the `StatusCodePagesMiddleware` by adding a line to the `Configure` method:
+Por padrão, sua aplicação não fornecerá uma rica página de código de status para os códigos de status HTTP como 500 (Erro Interno do Servidor) ou 404 (Não Encontrado). Você pode configurar o `StatusCodePagesMiddleware` ao adicionar um linha no método `Configure`:
 
 ```csharp
 app.UseStatusCodePages();
 ```
 
-By default, this middleware adds simple, text-only handlers for common status codes, such as 404:
+Por padrão, este middleware adiciona controladores do tipo somente texto para os código de status comuns, tipo 404:
 
-![404 page](error-handling/_static/default-404-status-code.png)
+![Página 404](error-handling/_static/default-404-status-code.png)
 
-The middleware supports several different extension methods. One takes a lambda expression, another takes a content type and format string.
+O middleware supporta muitos métodos de extensão diferentes. Alguns recebem uma expressão lambda, outros um tipo de conteúdo e formato string.
 
 [!code-csharp[Main](error-handling/sample/Startup.cs?name=snippet_StatusCodePages)]
 
@@ -80,7 +82,7 @@ The middleware supports several different extension methods. One takes a lambda 
 app.UseStatusCodePages("text/plain", "Status code page, status code: {0}");
 ```
 
-There are also redirect extension methods. One sends a 302 status code to the client, and one returns the original status code to the client but also executes the handler for the redirect URL.
+Existem também os métodos de extensão de redirecionamento. Uns enviam um código de status 302 para o cliente, outros retornam o código de status original para o cliente, mas também executam o controlador para a URL redirecionada.
 
 [!code-csharp[Main](error-handling/sample/Startup.cs?name=snippet_StatusCodePagesWithRedirect)]
 
@@ -88,7 +90,7 @@ There are also redirect extension methods. One sends a 302 status code to the cl
 app.UseStatusCodePagesWithReExecute("/error/{0}");
 ```
 
-If you need to disable status code pages for certain requests, you can do so:
+Se você precisar desabilitar a página de código de satus para certas requisições, você pode fazer assim:
 
 ```csharp
 var statusCodePagesFeature = context.Features.Get<IStatusCodePagesFeature>();
