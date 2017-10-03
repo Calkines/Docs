@@ -24,7 +24,7 @@ Este artigo cobre as abordagens comuns para manipulação de erros em aplicaçõ
 
 ## A página de exceções do desenvolvedor
 
-Para configurar uma aplicação para exibir a página que mostra informações detalhadas sobre exceções, instale o pacote NuGet `Microsoft.AspNetCore.Diagnostics` e adicione uma linha para o [Método de configuração na classe Startup](startup.md):
+Para configurar uma aplicação a exibir uma página que mostra informações detalhadas sobre exceções, instale o pacote NuGet `Microsoft.AspNetCore.Diagnostics` e adicione uma linha para o [Método de configuração na classe Startup](startup.md):
 
 [!code-csharp[Main](error-handling/sample/Startup.cs?name=snippet_DevExceptionPage&highlight=7)]
 
@@ -99,39 +99,36 @@ if (statusCodePagesFeature != null)
   statusCodePagesFeature.Enabled = false;
 }
 ```
+## Código de manipulação de exceção
 
-## Exception-handling code
+O Código em uma página de manipulação de exceções pode estourar uma exceção. É geralmente uma boa ideia para páginas de erro em produção consistir consistir de contéudo puramente estático.
 
-Code in exception handling pages can throw exceptions. It's often a good idea for production error pages to consist of purely static content.
+Também, esteja ciente que uma vez que os cabeçalhos para uma resposta tenham sido enviados, você não pode alterar seu código de status, nem executar qualquer páginas ou controladores. A resposta precisa ser completada ou a conexão abortada.
 
-Also, be aware that once the headers for a response have been sent, you can't change the response's status code, nor can any exception pages or handlers run. The response must be completed or the connection aborted.
+## Tratamento de exeção no Servidor
 
-## Server exception handling
+Além da lógica de manipulaçã de exceção em sua aplicação, o [servidor](servers/index.md) que hospeda sua aplicação executa alguns tratamentos de exceções. Se o servidor encontrar uma exceção antes que o cabeçalho seja enviado, o server envia uma resposta 500 (Erro Interno do Servidor) sem corpo. Se o servidor encontrar uma exceção após o envio dos cabeçalhos, o server fecha a conexão. Requisições que não são tratadas pela sua aplicação são tratadas pelo servidor. Qualquer exceção que ocorra é tratada pelo tratamento de exceções do servidor. Quaisquer página de erro customizada configuradas ou middleware de tratamento ou filtros não afetam este comportamento.
 
-In addition to the exception handling logic in your app, the [server](servers/index.md) hosting your app performs some exception handling. If the server catches an exception before the headers are sent, the server sends a 500 Internal Server Error response with no body. If the server catches an exception after the headers have been sent, the server closes the connection. Requests that aren't handled by your app are handled by the server. Any exception that occurs is handled by the server's exception handling. Any configured custom error pages or exception handling middleware or filters don't affect this behavior.
+## Tratamento de exceções de inicialização
 
-## Startup exception handling
+Apenas a camada de hospedagem pode manipular exceções que foram colocadas na inicialização da aplicação. Você pode [configurar como o host comporta-se em resposta a errros durante inicialização](hosting.md#detailed-errors) usando `captureStartupErrors` e a chave `detailedErros`.
 
-Only the hosting layer can handle exceptions that take place during app startup. You can [configure how the host behaves in response to errors during startup](hosting.md#detailed-errors) using `captureStartupErrors` and the `detailedErrors` key.
+A hospedagem pode apenas mostrar uma página de erro para erros capturados na inicialização se o erro ocorrer após o vínculo entre host e endereço/porta. Se qualquer vinculo falhar por alguma razão, a camada de hospedagem armazena o log de exceções críticas, o processo dotnet falha, e nenhuma página de erro é exibida.
 
-Hosting can only show an error page for a captured startup error if the error occurs after host address/port binding. If any binding fails for any reason, the hosting layer logs a critical exception, the dotnet process crashes, and no error page is displayed.
+## Manipulação de erro com ASP.NET MVC
 
-## ASP.NET MVC error handling
+Aplicações [MVC](../mvc/index.md) tem algumas opções adicionais para manipulação de erros, como a configuração de filtros de exceção e execução de validação de modelo.
 
-[MVC](../mvc/index.md) apps have some additional options for handling errors, such as configuring exception filters and performing model validation.
+### Filtros de exceção
 
-### Exception Filters
+Filtros de exceção podem ser configurados globalmente ou em um controle ou ação básicos na aplicação MVC. Estes fitlros manipulam qualquer exceção não tratada que ocorrer durante a execução de um ação de controle ou outro filtro, e não são chamado de outra forma. Aprenda mais sobre filtros de exceção em [Filtros](../mvc/controllers/filters.md).
 
-Exception filters can be configured globally or on a per-controller or per-action basis in an MVC app. These filters handle any unhandled exception that occurs during the execution of a controller action or another filter, and are not called otherwise. Learn more about exception filters in [Filters](../mvc/controllers/filters.md).
+>[!DICA]
+> Filtros de exceção são bons para encurralar exceções que ocorrem dentro de ações MVC, mas eles não são tão flexíveis como o middleware de tratamento de exceções. Prefira o middleware para casos geral, e use os filtros apenas nos locais que você precisar fazer um tratamento de erro *diferenciado* baseado nas quais ações MVC você escolheu.
 
->[!TIP]
-> Exception filters are good for trapping exceptions that occur within MVC actions, but they're not as flexible as error handling middleware. Prefer middleware for the general case, and use filters only where you need to do error handling *differently* based on which MVC action was chosen.
+### Manipulação do Modelo de Erros por Estado
 
-### Handling Model State Errors
+[Validação de Modelo](../mvc/models/validation.md) ocorre antes de cada ação de controle começar a ser invocada, e ela é a ação do método respnsável por inspecionar `ModelState.IsValid` e reagir adequadamente.
 
-[Model validation](../mvc/models/validation.md) occurs prior to each controller action being invoked, and it is the action method’s responsibility to inspect `ModelState.IsValid` and react appropriately.
-
-Some apps will choose to follow a standard convention for dealing with model validation errors, in which case a [filter](../mvc/controllers/filters.md) may be an appropriate place to implement such a policy. You should test how your actions behave with invalid model states. Learn more in [Testing controller logic](../mvc/controllers/testing.md).
-
-
+Algumas aplicação vão escolher seguir uma convenção padrão para lidar com o modelo de validação de erros, neste caso um [filtro](../mvc/controllers/filters.md) pode ser um lugar apropriado para implementar tal politica. Você precisa testar como suas ações comportam-se com modelos de estado inválidos. Aprenda mais em [Testando a lógica de um controlador](../mvc/controllers/testing.md).
 
