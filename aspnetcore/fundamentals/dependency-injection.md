@@ -19,7 +19,7 @@ ms.custom: H1Hack27Feb2017
 
 Por [Steve Smith](https://ardalis.com/) e [Scott Addie](https://scottaddie.com)
 
-O ASP.NET Core foi desenvolvido desde a base até o topo para suportar proporcionar a injeção de dependência. As aplicações ASP.NET Core podem usufluir de serviços de framework prontos por os terem injetado em seus métodos na classe Startup, e serviços de aplicação também podem ser configurados para injeção. O recipiente padrão de serviços fornecido pelo ASP.NET Core proporciona um conjunto mínimo de funcinalidades e não tem a intenção de substituir outros recipientes.
+O ASP.NET Core foi desenvolvido desde a base até o topo para suportar e proporcionar a injeção de dependência. As aplicações ASP.NET Core podem usufluir de serviços de framework prontos por os terem injetado em seus métodos na classe Startup, e serviços de aplicação também podem ser configurados para injeção. O recipiente padrão de serviços fornecido pelo ASP.NET Core proporciona um conjunto mínimo de funcinalidades e não tem a intenção de substituir outros recipientes.
 
 [Visualizar ou baixar código demonstrativo](https://github.com/aspnet/Docs/tree/master/aspnetcore/fundamentals/dependency-injection/sample)
 
@@ -29,30 +29,27 @@ Injeção de Dependência, abreviado em inglês como DI, é uma técnica para al
 
 Quando classes são desenvolvidas com o DI em mente, elas são fracamente acopladas porque elas não possuem diretamente dependências hard-coded em seus colaboradores. Isto segue o [Princípio da Inversão de Dependência](http://deviq.com/dependency-inversion-principle/), que afirma que *"módulos de alto nível não devem depender de módulos de baixo nível; ambos devem depender de abstrações."* Em vez de referênciar implementações específicas, classes requerem abstrações (geralmente `interfaces`) que são fornecidas no momento da construção das classes. Extração de dependências em interfaces e fornecimento de implementações destas interfaces como parâmetros é também um exemplo do [Padrão de Design Estratégia](http://deviq.com/strategy-design-pattern/).
 
-Quando o sistema é desenvolvido usando DI, com muitas classes requisitando suas dependências através de seus construtores (ou propriedades), é útil ter um classe dedicada para criar estas classes com suas dependências associadas. Estas classes são referenciadas como *containers* (recipientes), ou mais especificamente, recipientes de [Inversão de Controle, sigla em inglês (IoC)](http://deviq.com/inversion-of-control/) ou de Injeção de Dependência (DI). Um recipiente é essencialmente uma fábrica que é responsável por fornecer instâncias de tipos que são requisitadas. Se um determinado tipo for declarado 
+Quando o sistema é desenvolvido usando DI, com muitas classes requisitando suas dependências através de seus construtores (ou propriedades), é útil ter um classe dedicada para criar estas classes com suas dependências associadas. Estas classes são referenciadas como *containers* (recipientes), ou mais especificamente, recipientes de [Inversão de Controle, sigla em inglês (IoC)](http://deviq.com/inversion-of-control/) ou de Injeção de Dependência (DI). Um recipiente é essencialmente uma fábrica que é responsável por fornecer instâncias de tipos que são requisitadas. Se um determinado tipo for declarado possuindo dependências, e o recipiente tiver sido configurado para fornecer estes tipos de dependências, o recipiente criará as dependências como parte da criação da instância de requisição. Deste modo, linha complexas de dependências podem ser fornecidas para classes sem a necessidade de qualquer construção "hard-coded". Além da criação de objetos com suas dependências, recipientes geralmente gerenciam o tempo de vida dos objetos na aplicação.
 
-When a system is designed to use DI, with many classes requesting their dependencies via their constructor (or properties), it's helpful to have a class dedicated to creating these classes with their associated dependencies. These classes are referred to as *containers*, or more specifically, [Inversion of Control (IoC)](http://deviq.com/inversion-of-control/) containers or Dependency Injection (DI) containers. A container is essentially a factory that is responsible for providing instances of types that are requested from it. If a given type has declared that it has dependencies, and the container has been configured to provide the dependency types, it will create the dependencies as part of creating the requested instance. In this way, complex dependency graphs can be provided to classes without the need for any hard-coded object construction. In addition to creating objects with their dependencies, containers typically manage object lifetimes within the application.
+O ASP.NET Core incluí um simples recipiente pré-montado (representado pela interface `IServiceProvider`) que suporta a injeção por construtor por padrão, o ASP.NET disponibiliza  serviços através de DI. Recipientes ASP.NET referem-se aos tipos que ele gerencia como *serviços*. Por todo resto deste artigo, *serviços* vão referir-se a tipos que são gerenciados pelo recipiente IoC do ASP.NET Core. Você configura o serviço do recipiente pré-fabricado no método `ConfigureServices` de sua classe `Startup` em sua aplicação. 
 
-ASP.NET Core includes a simple built-in container (represented by the `IServiceProvider` interface) that supports constructor injection by default, and ASP.NET makes certain services available through DI. ASP.NET's container refers to the types it manages as *services*. Throughout the rest of this article, *services* will refer to types that are managed by ASP.NET Core's IoC container. You configure the built-in container's services in the `ConfigureServices` method in your application's `Startup` class.
+> [!NOTA]
+> Martin Fowler escrereveu um artigo extenso em [Recipientes de Inversão de Controle e Padrão de Injeção de Dependência](https://www.martinfowler.com/articles/injection.html). Padrões Microsoft e Práticas também possuem uma vasta descrição da [Injeção de Dependência](https://msdn.microsoft.com/library/hh323705.aspx).
 
-> [!NOTE]
-> Martin Fowler has written an extensive article on [Inversion of Control Containers and the Dependency Injection Pattern](https://www.martinfowler.com/articles/injection.html). Microsoft Patterns and Practices also has a great description of [Dependency Injection](https://msdn.microsoft.com/library/hh323705.aspx).
+> [!NOTA]
+> Este artigo aborda a Injeção de Dependência como aplicada a todas aplicações ASP.NET. A Injeção de Dependência dentro dos controles MVC é abordada em [Injeção de Dependência e Controles](../mvc/controllers/dependency-injection.md).
 
-> [!NOTE]
-> This article covers Dependency Injection as it applies to all ASP.NET applications. Dependency Injection within MVC controllers is covered in [Dependency Injection and Controllers](../mvc/controllers/dependency-injection.md).
+### Comportamento da Injeção por Construtor
 
-### Constructor Injection Behavior
+Injeção por Construtor requer que o contrutor em questão seja *público*. Caso contrário, sua aplicação lancará uma exceção `InvalidOperationException`:
 
-Constructor injection requires that the constructor in question be *public*. Otherwise, your app will throw an `InvalidOperationException`:
+> Um construtor adequado para o tipo 'SeuTipo' não pode ser localizado. Garanta que o tipo é concreto e os serviços estão registrados para todos os parâmetros do construtor público.
 
-> A suitable constructor for type 'YourType' could not be located. Ensure the type is concrete and services are registered for all parameters of a public constructor.
+A injeção por contrutor requer que apenas um construtor aplicável exista. Sobrecarga de construtores são suportadas, mas apenas apenas uma sobrecarga pode existir, cujo argumentos podem ser todos realizados por injeção de dependência. Se mais de um existir, sua aplicação vai levantar uma `InvalidOperationExeption`:
 
+> Construtores múltiplos aceitando todos os tipos de argumentos foram encontrados no tipo 'seuTipo'. Deveria haver apenas um construtor aplicável.
 
-Constructor injection requires that only one applicable constructor exist. Constructor overloads are supported, but only one overload can exist whose arguments can all be fulfilled by dependency injection. If more than one exists, your app will throw an `InvalidOperationException`:
-
-> Multiple constructors accepting all given argument types have been found in type 'YourType'. There should only be one applicable constructor.
-
-Constructors can accept arguments that are not provided by dependency injection, but these must support default values. For example:
+Construtores podem aceitar argumentos que não são fornecidos por injeção de dependência, mas estes precisam suportar valores padrões. Por exemplo:
 
 ```csharp
 // throws InvalidOperationException: Unable to resolve service for type 'System.String'...
@@ -70,11 +67,11 @@ public CharactersController(ICharacterRepository characterRepository, string tit
 }
 ```
 
-## Using Framework-Provided Services
+## Usando os Serviços de Fornecimento do Framework
 
-The `ConfigureServices` method in the `Startup` class is responsible for defining the services the application will use, including platform features like Entity Framework Core and ASP.NET Core MVC. Initially, the `IServiceCollection` provided to `ConfigureServices` has the following services defined (depending on [how the host was configured](xref:fundamentals/hosting)):
+O método `ConfigureServices` na classe `Startup` é responsável pela definição dos serviços que a aplicação usará, incluindo funcionalidades de plataforma como o Entity Framework Core e o ASP.NET Core MVC. Inicialmente, a `IServiceCollection` fornecida para o `ConfigureServices` possui os seguintes serviços definidos (dependendo de [como o host foi configurado](xref:fundamentals/hosting));
 
-| Service Type | Lifetime |
+| Tipo do Serviço | Tempo de Vida |
 | ----- | ------- |
 | [Microsoft.AspNetCore.Hosting.IHostingEnvironment](https://docs.microsoft.com/aspnet/core/api/microsoft.aspnetcore.hosting.ihostingenvironment) | Singleton |
 | [Microsoft.Extensions.Logging.ILoggerFactory](https://docs.microsoft.com/aspnet/core/api/microsoft.extensions.logging.iloggerfactory) | Singleton |
@@ -91,40 +88,42 @@ The `ConfigureServices` method in the `Startup` class is responsible for definin
 | [Microsoft.AspNetCore.Hosting.IStartup](https://docs.microsoft.com/aspnet/core/api/microsoft.aspnetcore.hosting.istartup) | Singleton |
 | [Microsoft.AspNetCore.Hosting.IApplicationLifetime](https://docs.microsoft.com/aspnet/core/api/microsoft.aspnetcore.hosting.iapplicationlifetime) | Singleton |
 
-Below is an example of how to add additional services to the container using a number of extension methods like `AddDbContext`, `AddIdentity`, and `AddMvc`.
+Abaixo está um exemplo de como adicionar serviços adicionais aos recipientes usando um número de métodos de extensão como `AddDbContext`, `AddIdentity`, e `AddMvc`.
 
 [!code-csharp[Main](../common/samples/WebApplication1/Startup.cs?highlight=5-6,8-10,12&range=39-56)]
 
-The features and middleware provided by ASP.NET, such as MVC, follow a convention of using a single Add*ServiceName* extension method to register all of the services required by that feature.
+Os recursos e middleware fornecidos pelo ASP.NET, como o MVC, seguem uma convenção de usar um único método de extensão Add*NomeDoServico* para registrar todos os serviços requeridos por aquela funcionalidade.
 
->[!TIP]
-> You can request certain framework-provided services within `Startup` methods through their parameter lists - see [Application Startup](startup.md) for more details.
+>[!DICA]
+> Você pode requisitar certo serviço fornecido pelo framework dentro dos métodos `Startup` através de suas listas de parâmetros - veja [Inicialização de Aplicação](startup.md) para mais detalhes.
 
-## Registering Your Own Services
+## Registrando seus Próprios Serviços
 
-You can register your own application services as follows. The first generic type represents the type (typically an interface) that will be requested from the container. The second generic type represents the concrete type that will be instantiated by the container and used to fulfill such requests.
+Você pode registrar seu próprio serviço de aplicação da seguinte maneira.O primeiro tipo genérico representa o tipo (geralmente uma interface) que será requisitada do recipiente. O segundo tipo genérico representa o tipo concreto que será instanciado pelo recipiente e usado para realizar as requisições. 
 
 [!code-csharp[Main](../common/samples/WebApplication1/Startup.cs?range=53-54)]
 
-> [!NOTE]
-> Each `services.Add<ServiceName>` extension method adds (and potentially configures) services. For example, `services.AddMvc()` adds the services MVC requires. It's recommended that you follow this convention, placing extension methods in the `Microsoft.Extensions.DependencyInjection` namespace, to encapsulate groups of service registrations.
+> [!NOTA]
+> Cada método de extensão `services.Add<ServiceName>` adiciona (e potencialmente configura) serviços. Por exemplo, `services.AddMvc()` adiciona os serviços que o MVC requer. É recomendado que você siga esta convenção, colocando métodos de entensão no namespace `Microsoft.Extensions.DependencyInjection`, para encapsular grupos de registros de serviço.
 
-The `AddTransient` method is used to map abstract types to concrete services that are instantiated separately for every object that requires it. This is known as the service's *lifetime*, and additional lifetime options are described below. It is important to choose an appropriate lifetime for each of the services you register. Should a new instance of the service be provided to each class that requests it? Should one instance be used throughout a given web request? Or should a single instance be used for the lifetime of the application?
+O método `AddTransient` é usado ara mapear tipos abstratos para serviços conretos que são instanciados separadamente para cada objeto que o requer. Isto é conhecido como o *tempo de vida* do serviço, e opções adicionais de tempo de vida de serviço são descritas abaixo. É importante escolher um tempo de vida apropriado para cada serviço que você registrar. Uma nova instância de cada serviço deveria ser fornecida para cada classe que a requisitasse? Uma instância deveria ser usada durante um determinada requisição web? Ou uma única instânacia deveria ser usada para o tempo de vida da aplicação?
 
-In the sample for this article, there is a simple controller that displays character names, called `CharactersController`. Its `Index` method displays the current list of characters that have been stored in the application, and initializes the collection with a handful of characters if none exist. Note that although this application uses Entity Framework Core and the `ApplicationDbContext` class for its persistence, none of that is apparent in the controller. Instead, the specific data access mechanism has been abstracted behind an interface, `ICharacterRepository`, which follows the [repository pattern](http://deviq.com/repository-pattern/). An instance of `ICharacterRepository` is requested via the constructor and assigned to a private field, which is then used to access characters as necessary.
+Para fins de exemplo deste artigo, existe um *controller* simples que exibe nome de personagens, chamado `CharactersController`. É o método `Index` que exibe a lista atual de personagens que foram armazenados na aplicação, e inicializa a coleção com um punhado de personagens, se nenhum existir. Perceba que  apesar desta aplicação usar o Entity Framework Core e a classe `ApplicationDbContext` para esta persistência, nada disso é aparente no *controller*. Pelo contrário, o mecânismo específico de acesso a dados foi abstraído em uma interface, `ICharacterRepository`, a qual segue o [padrão de repositório](http://deviq.com/repository-pattern/). Uma instância de `ICharacterRepository` é requisitada através de construtor e atribuída a um campo privado, o qual é usado para acessar o personagem.
 
 [!code-csharp[Main](../fundamentals/dependency-injection/sample/DependencyInjectionSample/Controllers/CharactersController.cs?highlight=3,5,6,7,8,14,21-27&range=8-36)]
 
-The `ICharacterRepository` defines the two methods the controller needs to work with `Character` instances.
+A interface `ICharacterRepository` define dois métodos que o *controller* precisa para trabalhar com instâncias de `Character`.
 
 [!code-csharp[Main](../fundamentals/dependency-injection/sample/DependencyInjectionSample/Interfaces/ICharacterRepository.cs?highlight=8,9)]
 
-This interface is in turn implemented by a concrete type, `CharacterRepository`, that is used at runtime.
+Esta interface é implementada, em momento oportuno, por um tipo concreto, `CharacterRepository`, que é usado em tempo de execução.
 
-> [!NOTE]
-> The way DI is used with the `CharacterRepository` class is a general model you can follow for all of your application services, not just in "repositories" or data access classes.
+> [!NOTA]
+> A maneira como a DI é usada na classe `CharacterRepository` é uma modelo geral que você pode seguir para em todos serviços de sua aplicação, não apenas em repositórios ou classes de acesso a dados.
 
 [!code-csharp[Main](../fundamentals/dependency-injection/sample/DependencyInjectionSample/Models/CharacterRepository.cs?highlight=9,11,12,13,14)]
+
+Perceba que `CharacterRepository` requer um `AplicationDbContext` em seu construtor. Isto não é incomum para injeção de dependência ser usada de maneira encadeada como esta, na qual cada dependência requisitada, no tempo correto, requisite suas próprias dependências.
 
 Note that `CharacterRepository` requests an `ApplicationDbContext` in its constructor. It is not unusual for dependency injection to be used in a chained fashion like this, with each requested dependency in turn requesting its own dependencies. The container is responsible for resolving all of the dependencies in the graph and returning the fully resolved service.
 
