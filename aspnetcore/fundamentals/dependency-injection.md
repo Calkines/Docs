@@ -123,77 +123,77 @@ Esta interface é implementada, em momento oportuno, por um tipo concreto, `Char
 
 [!code-csharp[Main](../fundamentals/dependency-injection/sample/DependencyInjectionSample/Models/CharacterRepository.cs?highlight=9,11,12,13,14)]
 
-Perceba que `CharacterRepository` requer um `AplicationDbContext` em seu construtor. Isto não é incomum para injeção de dependência ser usada de maneira encadeada como esta, na qual cada dependência requisitada, no tempo correto, requisite suas próprias dependências.
+Perceba que `CharacterRepository` requer um `AplicationDbContext` em seu construtor. Isto não é incomum para injeção de dependência ser usada de maneira encadeada como essa, na qual cada dependência requisitada, no tempo correto, requisite suas próprias dependências. O recipiente é responsável por resolver todas dependências na cadeia e retornar o serviço totalmente resolvido.
 
-Note that `CharacterRepository` requests an `ApplicationDbContext` in its constructor. It is not unusual for dependency injection to be used in a chained fashion like this, with each requested dependency in turn requesting its own dependencies. The container is responsible for resolving all of the dependencies in the graph and returning the fully resolved service.
+> [!NOTA]
+> A criação do objeto requisitado, e todos seus objetos requeridos, é algumas vezes chamado referenciada como *object graph*. Da mesma forma, a coleção coletiva das dependências que precisam ser resolvidas é geralmente chamada de *dependency tree*, em português árvore de dependência, ou *dependency graph*, cadeia de dependência.
 
-> [!NOTE]
-> Creating the requested object, and all of the objects it requires, and all of the objects those require, is sometimes referred to as an *object graph*. Likewise, the collective set of dependencies that must be resolved is typically referred to as a *dependency tree* or *dependency graph*.
-
-In this case, both `ICharacterRepository` and in turn `ApplicationDbContext` must be registered with the services container in `ConfigureServices` in `Startup`. `ApplicationDbContext` is configured with the call to the extension method `AddDbContext<T>`. The following code shows the registration of the `CharacterRepository` type.
+Neste caso, ambos `ICharacterRepository` e, ao seu tempo, `ApplicationDbContext` precisam ser registrados no repositório de serviços `ConfigureServices` no `Startup`. `ApplicationDbContext` é configurado com a chamada ao método de extensão `AddDbContext<T>`. O código seguinte mostra o processo de registro do tipo `CharacterRepository`.
 
 [!code-csharp[Main](dependency-injection/sample/DependencyInjectionSample/Startup.cs?highlight=3-5,11&range=16-32)]
 
-Entity Framework contexts should be added to the services container using the `Scoped` lifetime. This is taken care of automatically if you use the helper methods as shown above. Repositories that will make use of Entity Framework should use the same lifetime.
+O contexto do Entity Framework precisa ser adicionado ao recipiente de serviços usando o tempo de vida `Scoped`. Isto é feito automaticamente se você usar métodos de ajuda como mostrado abaixo. Repositórios que farão uso do Entity Framework precisam usar o mesmo tempo de vida.
 
->[!WARNING]
-> The main danger to be wary of is resolving a `Scoped` service from a singleton. It's likely in such a case that the service will have incorrect state when processing subsequent requests.
+>[!ALERTA]
+> O principal perigo, o qual precisamos nos acaltelar, é resolver o serviço `Scoped` de um *singleton*. Isso é desejado nesse caso que o serviço vai ter um estado incorreto, quando estiver processando requisições subsequentes.
 
-Services that have dependencies should register them in the container. If a service's constructor requires a primitive, such as a `string`, this can be injected by using the [options pattern and configuration](configuration.md).
+Serviços que possuem dependências precisam registrá-las no recipiente. Se um construtor do serviço requerer um tipo primitivo, como um `string`, isto pode ser injetado usando os [padrões de opção e configuração](configuration.md).
 
-## Service Lifetimes and Registration Options
+## Tempos de Vida dos Serviços e Opções de Registro
 
-ASP.NET services can be configured with the following lifetimes:
+Os serviços ASP.NET podem ser configurados com os seguintes tempos de vida:
 
-**Transient**
+**Transiente (que não permanece, transitório) -Transient-**
 
-Transient lifetime services are created each time they are requested. This lifetime works best for lightweight, stateless services.
+Serviços com tempo de vida transiente são criados cada vez que são requisitados. Este tempo de vida funciona melhorr para serviços leves, sem estados.
 
-**Scoped**
+**Com Escopo -Scoped- **
 
-Scoped lifetime services are created once per request.
+Serviços com tempo de vida por escopo são criado uma vez por requisição.
 
-**Singleton**
+**Único -Singleton-**
 
-Singleton lifetime services are created the first time they are requested (or when `ConfigureServices` is run if you specify an instance there) and then every subsequent request will use the same instance. If your application requires singleton behavior, allowing the services container to manage the service's lifetime is recommended instead of implementing the singleton design pattern and managing your object's lifetime in the class yourself.
+Serviços com tempo de vida únicos são criados a primeira vez que são requisitados (ou quando `ConfigureServices` é executado se você especificar uma instância ali) e então cada chamada subsequente vai usar a mesma instância. Se sua aplicação requerer o comportamento único *singleton* permitindo o recipiente de serviços gerenciar o tempo de vida do serviço, é recomendado em vez disso implementar o padrão de projeto *singleton* e gerenciar, você mesmo, o tempo de vida de seu objeto na classe.
 
-Services can be registered with the container in several ways. We have already seen how to register a service implementation with a given type by specifying the concrete type to use. In addition, a factory can be specified, which will then be used to create the instance on demand. The third approach is to directly specify the instance of the type to use, in which case the container will never attempt to create an instance (nor will it dispose of the instance).
+Serviços podem ser registrados nos recipientes de diferentes formas. Nós já vimos como registrar uma implementação de serviço com um determinado tipo ao especificar o tipo concreto de uso. Além disso, uma fábrica pode ser especificada, a qual será então usada para criar uma instância sob demanda. A terceira abordagem é especificar diretamente a instância do tipo a ser usado, que, neste caso, o recipiente nunca tentará criar uma instância (nem tentará descartá-la). 
 
-To demonstrate the difference between these lifetime and registration options, consider a simple interface that represents one or more tasks as an *operation* with a unique identifier, `OperationId`. Depending on how we configure the lifetime for this service, the container will provide either the same or different instances of the service to the requesting class. To make it clear which lifetime is being requested, we will create one type per lifetime option:
+Para demonstrar a diferente entre esses tempos de vida e opções de registro, considera uma interface simples que representa uma ou mais tarefas como uma *operação* com um identificador único, `OperationId`. Dependendo de como nós configurarmos o tempo de vida deste serviço, o recipiente proverá tanto o mesma ou diferente instâncias para o serviço à classe requisitante. Para deixar claro qual tempo de vida está sendo requisitado, nós criaremos um tipo de tempo de vida por opção:
 
 [!code-csharp[Main](../fundamentals/dependency-injection/sample/DependencyInjectionSample/Interfaces/IOperation.cs?highlight=5-8)]
 
-We implement these interfaces using a single class, `Operation`, that accepts a `Guid` in its constructor, or uses a new `Guid` if none is provided.
+Nós implementamos estas interfaces usando uma única classe, `Operation`, que aceita um `Guid` em seu construtor, ou usa um novo `Guid`, caso nenhum tenha sido informado.
 
-Next, in `ConfigureServices`, each type is added to the container according to its named lifetime:
+Na sequência, no `ConfigureServices`, cada tipo é adicionado ao recipiente de acodo com seu tempo de vida:
 
 [!code-csharp[Main](dependency-injection/sample/DependencyInjectionSample/Startup.cs?range=26-32)]
 
-Note that the `IOperationSingletonInstance` service is using a specific instance with a known ID of `Guid.Empty` so it will be clear when this type is in use (its Guid will be all zeroes). We have also registered an `OperationService` that depends on each of the other `Operation` types, so that it will be clear within a request whether this service is getting the same instance as the controller, or a new one, for each operation type. All this service does is expose its dependencies as properties, so they can be displayed in the view.
+Perceba que o serviço `IOperationSingletonInstance` é usado para especificar a instância com um ID conhecido de `Guid.Empty`, isso deixará claro quando este tipo estiver em uso (este Guid será zerado). Nós também registramos um `OperationService` que depende de cada um dos tipos `Operation`, então ficará claro dentro da requisição se este serviço está pegando a mesma instância que o *controller*, ou uma nova, para cada tipo de operação. Todos estes serviços expõem suas dependências como propriedades, então eles podem ser exibidos em uma *view*.
 
 [!code-csharp[Main](dependency-injection/sample/DependencyInjectionSample/Services/OperationService.cs)]
 
-To demonstrate the object lifetimes within and between separate individual requests to the application, the sample includes an `OperationsController` that requests each kind of `IOperation` type as well as an `OperationService`. The `Index` action then displays all of the controller's and service's `OperationId` values.
+Para demonstrar o tempo de vida do objeto dentro e entre as requisições individuais separadas à aplicação, a demonstração incluí um `OperationsController` que requisita cada tipo do modelo `IOperation` como também um `OperationService`. A ação `Index` entã exibe todos os valores de `OperationId` para *controller* e o serviço.
 
 [!code-csharp[Main](dependency-injection/sample/DependencyInjectionSample/Controllers/OperationsController.cs)]
 
-Now two separate requests are made to this controller action:
+Agora duas requisições separadas são feitas a esta *action* do *controller*:
 
-![The Operations view of the Dependency Injection Sample web application running in Microsoft Edge showing Operation ID values (GUID's) for Transient, Scoped, Singleton, and Instance Controller and Operation Service Operations on the first request.](dependency-injection/_static/lifetimes_request1.png)
+![A *view Operations* do exemplo da aplicação web de Injeção de Dependência executando no Microsoft Edge, exibindo os valores ID das operações (GUID's) para as operações de serviço Transient, Scoped, Singleton e Instance *Controller* na primeira requisição.](dependency-injection/_static/lifetimes_request1.png)
 
-![The operations view showing the Operation ID values for a second request.](dependency-injection/_static/lifetimes_request2.png)
+![A *view Operations* exibindo os valores ID de operações para a segunda requisição](dependency-injection/_static/lifetimes_request2.png)
 
-Observe which of the `OperationId` values vary within a request, and between requests.
+Observe que os valores de `OperationId` variam dentro da requisição, e entre as requisições.
 
-* *Transient* objects are always different; a new instance is provided to every controller and every service.
+* Objetos *Transient* são sempre diferentes; uma nova instância é sempre fornecida para cada *controller* e cada *service*.
 
-* *Scoped* objects are the same within a request, but different across different requests
+* Objetos *Scoped* são o mesmo dentro da requisição, mas diferentes entre requisições diferentes.
 
-* *Singleton* objects are the same for every object and every request (regardless of whether an instance is provided in `ConfigureServices`)
+* Objetos *Singleton* são o mesmo para cada objeto e cada requisição (independente de se a instância é fornecida no `ConfigureServices`)
+ 
+## Serviços de Requisição
 
-## Request Services
+Os serviços disponíveis dentro de uma requisição ASP.NET do `HttpContext` são expostos através da coleção `RequestServices`.
 
-The services available within an ASP.NET request from `HttpContext` are exposed through the `RequestServices` collection.
+
 
 ![HttpContext Request Services Intellisense contextual dialog stating that Request Services gets or sets the IServiceProvider that provides access to the request's service container.](dependency-injection/_static/request-services.png)
 
