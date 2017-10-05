@@ -14,78 +14,79 @@ uid: mvc/overview
 ---
 # Overview of ASP.NET Core MVC
 
-By [Steve Smith](https://ardalis.com/)
+Por [Steve Smith](https://ardalis.com/)
 
-ASP.NET Core MVC is a rich framework for building web apps and APIs using the Model-View-Controller design pattern.
+O ASP.NET Core MVC é um rico framework para construção de aplicações web usando o padrão de projeto *Model-View-Controller*.
 
-## What is the MVC pattern?
+## O que é o padrão MVC?
 
-The Model-View-Controller (MVC) architectural pattern separates an application into three main groups of components: Models, Views, and Controllers. This pattern helps to achieve [separation of concerns](http://deviq.com/separation-of-concerns/). Using this pattern, user requests are routed to a Controller which is responsible for working with the Model to perform user actions and/or retrieve results of queries. The Controller chooses the View to display to the user, and provides it with any Model data it requires.
+O padrão de arquitetura *Model-View-Controller* (MVC) separa um aplicação em três grandes grupos principais de componentes: Modelos, Visões, e Controladores. Este padrão ajuda a atingir a [separação de conceitos](http://deviq.com/separation-of-concerns/). Usando este padrão, as requisições de usuário são encaminhadas para o *Controller*, o qual é responsável por trabalhar junto com o *Model* para executar ações de usuários e/ou recuperar resultados de consultas. O *Controller* escolhe a *View* a ser exibida ao usuário, e fornece esta *View* junto com qualquer informações de Modelo que for necessário.
 
-The following diagram shows the three main components and which ones reference the others:
+O diagrama seguinte mostra os três componentes principais e como se receferem aos outros:
 
 ![MVC Pattern](overview/_static/mvc.png)
 
-This delineation of responsibilities helps you scale the application in terms of complexity because it’s easier to code, debug, and test something (model, view, or controller) that has a single job (and follows the [Single Responsibility Principle](http://deviq.com/single-responsibility-principle/)). It's more difficult to update, test, and debug code that has dependencies spread across two or more of these three areas. For example, user interface logic tends to change more frequently than business logic. If presentation code and business logic are combined in a single object, you have to modify an object containing business logic every time you change the user interface. This is likely to introduce errors and require the retesting of all business logic after every minimal user interface change.
+Esta delineação de resposabilidades lhe ajuda a esccalar a aplicação em termos de complexidade, porque é fácil códificar, depurar, e testar alguma coisa (*model*,*view*,*controller*) que tenha apenas um trabalho (seguindo o [Princípio da Resposabilidade Única](http://deviq.com/single-responsibility-principle/)). É mais difícil atualizar, testar e depurar um código que dependências espalhadas por duas ou mais destas três áreas. Por exemplo, a lógica da interface de usuário tende a mudar mais frequentemente que a lógica de negócios. Se o código da apresentação e a regra de negócio são combinados em um único objeto, você tem que modificar um objeto contendo regras de negócio, toda vez que você alterar a interface. Isto é suscetível de introduzir erros e requer um novo teste das regras de negócio a cada mínima mudança na interface de usuário.
 
-> [!NOTE]
-> Both the view and the controller depend on the model. However, the model depends on neither the view nor the controller. This is one of the key benefits of the separation. This separation allows the model to be built and tested independent of the visual presentation.
+> [!NOTA]
+> Tanto *View* como o *Controller* dependem do modelo. Contudo, o *model* não depende nem da *view* nem do *controller*. Isto é um dos benefícios chave da separação de conceitos. Esta separação permite que o modelo seja construído e testado de forma independente da apresentação visual.
 
-### Model Responsibilities
+### Responsabilidades do *Model*
 
-The Model in an MVC application represents the state of the application and any business logic or operations that should be performed by it. Business logic should be encapsulated in the model, along with any implementation logic for persisting the state of the application. Strongly-typed views will typically use ViewModel types specifically designed to contain the data to display on that view; the controller will create and populate these ViewModel instances from the model.
+O *Model* na aplicação MVC representa o estado da aplicação e de qualquer regra de negócio ou operações que precisam ser executadas por este. Regras de negócio precisam ser encapsuladas no modelo, junto com qualquer implementação lógica para persistência do estado da aplicação. *Views* fortemente tipadas usurão geralmente tipos *ViewModel* especialmente desenvolvidos para conterem as informações de exibição naquela *View*; o *controller* vai criar e popular estas instâncias de *ViewModel* do *model*.
 
-> [!NOTE]
-> There are many ways to organize the model in an app that uses the MVC architectural pattern. Learn more about some [different kinds of model types](http://deviq.com/kinds-of-models/).
+> [!NOTA]
+> Existem muitas maneiras de organizar o *model* em uma aplicação que usa o padrão de arquiterura MVC. Aprenda mais em [diferentes tipos de *model types*](http://deviq.com/kinds-of-models/).
 
-### View Responsibilities
+### Resposabilidades da *View*
 
-Views are responsible for presenting content through the user interface. They use the [Razor view engine](#razor-view-engine) to embed .NET code in HTML markup. There should be minimal logic within views, and any logic in them should relate to presenting content. If you find the need to perform a great deal of logic in view files in order to display data from a complex model, consider using a [View Component](views/view-components.md), ViewModel, or view template to simplify the view.
+*Views* são responsáveis para apresentar o conteúdo através da interface de usuário. Elas usam o [mecânismo de visualização Razor](#razor-view-engine) para embutir código .NET em marcações HTML. Deve haver um mínimo de lógica dentro das *views*, e qualquer lógica nelas deveria relacionar-se com o conteúdo apresentado. Se você encontrar o necessário para realizar uma grande lógica nos arquivos da *view* para exibir dados de um *model* complexo, considere o uso do [Componente *View*](views/view-components.md), ViewModel, ou modelo de *view* para simplificar a *view*.
 
-### Controller Responsibilities
+### Resposabilidades do *Controller*
 
-Controllers are the components that handle user interaction, work with the model, and ultimately select a view to render. In an MVC application, the view only displays information; the controller handles and responds to user input and interaction. In the MVC pattern, the controller is the initial entry point, and is responsible for selecting which model types to work with and which view to render (hence its name - it controls how the app responds to a given request).
+*Controllers* são componentes que manipulam a interação do usuário, trabalham com o modelo, e, finalmente, selecionam a *view* para renderização. Em uma aplicação MVC, a *view* somente exibe informação; o *controller* manipula e responde as informações de entrada e interações do usuário. No padrão de projeto MVC, o *controller* é o ponto de entrada inicial, e é resposável por selecionar quais *model types* devem ser usados e qual *view* renderiza (daí o seu nome - ele controla como o aplicativo responde a um determinado pedido).  
 
-> [!NOTE]
-> Controllers should not be overly complicated by too many responsibilities. To keep controller logic from becoming overly complex, use the [Single Responsibility Principle](http://deviq.com/single-responsibility-principle/) to push business logic out of the controller and into the domain model.
+>[!NOTA]
+>*Controllers* não devem ser demasiadamente complicados carregando muitas responsabilidades. Para manter a lógica do *controller* longe de tornar-se complexa, use o [Princípio da Responsabilidade Única](http://deviq.com/single-responsibility-principle/) para enviar regras de negócio para fora do *controller* e para dentro do modelo de domínio.
 
->[!TIP]
-> If you find that your controller actions frequently perform the same kinds of actions, you can follow the [Don't Repeat Yourself principle](http://deviq.com/don-t-repeat-yourself/) by moving these common actions into [filters](#filters).
+>[!DICA]
+> Se você achar que suas *actions* do *controller* geralmente executam os mesmos tipos de ações, você pode seguir o[Princípio do não se Repita](http://deviq.com/don-t-repeat-yourself/) ao mover estas *actions* comuns para [filtros](#filters).
 
-## What is ASP.NET Core MVC
+## O que é ASP.NET Core MVC
 
-The ASP.NET Core MVC framework is a lightweight, open source, highly testable presentation framework optimized for use with ASP.NET Core.
+O framework ASP.NET Core MVC é um framework de apresentação, leve, de código aberto, altamente testável e otimizado para uso com o ASP.NET Core.
 
-ASP.NET Core MVC provides a patterns-based way to build dynamic websites that enables a clean separation of concerns. It gives you full control over markup, supports TDD-friendly development and uses the latest web standards.
+O ASP.NET Core MVC fornece uma maneira baseada em padrões de projeto para construir website dinâmicos que permitem uma clara separação de conceitos. Isto lhe dá um controle total sobre o *markup*, suportando implementação por TDD-amigável e uso os últimos padrões web.
 
-## Features
+## Funcionalidades
 
-ASP.NET Core MVC includes the following:
+O ASP.NET Core MVC incluí o seguinte:
 
-* [Routing](#routing)
+* [Roteamento](#routing)
 * [Model binding](#model-binding)
-* [Model validation](#model-validation)
-* [Dependency injection](../fundamentals/dependency-injection.md)
-* [Filters](#filters)
-* [Areas](#areas)
-* [Web APIs](#web-apis)
-* [Testability](#testability)
-* [Razor view engine](#razor-view-engine)
-* [Strongly typed views](#strongly-typed-views)
+* [Validação de *Model*](#model-validation)
+* [Injeção de Dependência](../fundamentals/dependency-injection.md)
+* [Filtros](#filters)
+* [Áreas](#areas)
+* [APIs Web](#web-apis)
+* [Testabilidade](#testability)
+* [Mecânica de *view* Razor](#razor-view-engine)
+* [*Views* fortemente tipadas](#strongly-typed-views)
 * [Tag Helpers](#tag-helpers)
-* [View Components](#view-components)
+* [Componentes de *View*](#view-components)
 
-### Routing
+### Roteamento
 
-ASP.NET Core MVC is built on top of [ASP.NET Core's routing](../fundamentals/routing.md), a powerful URL-mapping component that lets you build applications that have comprehensible and searchable URLs. This enables you to define your application's URL naming patterns that work well for search engine optimization (SEO) and for link generation, without regard for how the files on your web server are organized. You can define your routes using a convenient route template syntax that supports route value constraints, defaults and optional values.
+O ASP.NET Core MVC é feito sob o topo do [roteamento do ASP.NET Core](../fundamentals/routing.md), um poderoso compoenente mapeador de URL que lhe permite construir aplicações que tenham URLs compreensíveis e encontráveis. Isto permite que você defina seus padrões de nomes de URL da aplicação para funcionarem de acordo com sistemas de otimização de busca (SEO) e para geração de atalhos, sem preocupar-se em como seus arquivos no servidor web estão organizados. Você pode definir suas rotas usando uma sintaxe conveniente de modelo de rota que suporta valores limitadores *constraints*, padrões e de valores opcionais.
 
-*Convention-based routing* enables you to globally define the URL formats that your application accepts and how each of those formats maps to a specific action method on given controller. When an incoming request is received, the routing engine parses the URL and matches it to one of the defined URL formats, and then calls the associated controller's action method.
+O *roteamento baseado em convenção* permite que você defina globalmente o formato da URL que sua aplicação aceita e como cada um desses formatos mapeiam um método *action* específico em um determinado *controller*. Quando uma requisição de entrada for recebida, a mecânica de roteamento analisa a URL e coincide-a com um daqueles formado de URL definidos, e então chama o método *action* do *controller* associado.
 
 ```csharp
 routes.MapRoute(name: "Default", template: "{controller=Home}/{action=Index}/{id?}");
 ```
 
-*Attribute routing* enables you to specify routing information by decorating your controllers and actions with attributes that define your application's routes. This means that your route definitions are placed next to the controller and action with which they're associated.
+O *roteamento de atributo* permite que você especifique informações de roteamento ao decorar seus *controllers* e *actions* com atributos que definem suas rotas de aplicação. Isto significa que suas definições de rota são colocadas próximas do *controller* e *action* com as quais são associadas.
+
 
 ```csharp
 [Route("api/[controller]")]
